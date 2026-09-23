@@ -1,0 +1,7 @@
+# 帧导出残留（正常出片是「帧直接管道进 ffmpeg」，不落盘；--frames= 才会写 PNG）
+frames/
+shots/
+*.png
+
+.DS_Store
+*.log

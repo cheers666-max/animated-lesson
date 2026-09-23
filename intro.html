@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>按笔画讲清楚 · animated-lesson</title>
+<link rel="stylesheet" href="engine/scene.css">
+<style>
+  /* 这是"入口网页"，不是课件 —— 可以滚动、可以扫读、可以分享链接。
+     真正的课件是 templates/deck.html?scenes=./scenes.about.js（交互版）。 */
+  html, body { overflow: auto; height: auto; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--ui); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 28px 96px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h1 { font-size: 44px; line-height: 1.15; letter-spacing: -.03em; margin: 14px 0 10px; }
+  h2 { font-size: 22px; margin: 56px 0 6px; letter-spacing: -.01em; }
+  h2 .n { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-right: 10px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  .kicker { font-family: var(--mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .lede { font-size: 20px; color: var(--muted); line-height: 1.6; max-width: 760px; }
+  .sub { color: var(--muted); font-size: 15px; line-height: 1.65; }
+  .hr { height: 1px; background: var(--line); margin: 44px 0 0; opacity: .7; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; margin: 26px 0 0; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 9px;
+         border: 1px solid var(--line); background: #0d1117; font-size: 15px; font-weight: 600; }
+  .btn.primary { background: var(--accent); color: #06202e; border-color: var(--accent); }
+  .btn small { font-weight: 400; opacity: .7; font-family: var(--mono); font-size: 12px; }
+  .grid { display: grid; gap: 14px; margin-top: 18px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .card { border: 1px solid var(--line); border-radius: 11px; padding: 16px 18px; background: #0b0f16; }
+  .card.tone-a { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .card.tone-b { border-color: color-mix(in srgb, var(--accent-2) 45%, var(--line)); }
+  .card.tone-g { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .card.bad { border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
+  .card .tag { font-family: var(--mono); font-size: 12px; color: var(--muted); display: block; margin-bottom: 8px; }
+  .card p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+  .card p b { color: var(--ink); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin-top: 16px; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .03em; }
+  td b { color: var(--ink); }
+  td.no { color: var(--bad); }
+  td.yes { color: var(--good); }
+  code, .mono { font-family: var(--mono); font-size: 13.5px; }
+  pre { background: #0b0f16; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
+  .metric { display: flex; flex-wrap: wrap; gap: 34px; margin-top: 22px; }
+  .metric div { }
+  .metric .v { font-family: var(--mono); font-size: 30px; font-weight: 700; }
+  .metric .l { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .quote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; font-size: 19px; font-style: italic; margin: 26px 0; }
+  .foot { margin-top: 64px; font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .shot { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">animated-lesson · 讲解模式</div>
+  <h1>按笔画讲清楚</h1>
+  <p class="lede">
+    把「结果」变成「过程」：画面是时间的纯函数，一笔一笔画出来。
+    于是它可播、可拖、<b>可断言</b>、可一键出片 —— 而讲解质量第一次有了门禁。
+  </p>
+
+  <div class="btns">
+    <a class="btn primary" href="templates/deck.html?scenes=./scenes.about.js">▶ 交互版（8 幕 · 3.2 分钟）<small>可拖可跳</small></a>
+    <a class="btn" href="out/intro-why-stroke-by-stroke.mp4">🎬 视频 1920×1080 <small>194s · 3.4MB</small></a>
+    <a class="btn" href="out/why-stroke-by-stroke.mp4">🎬 示例课件视频 <small>98s</small></a>
+    <a class="btn" href="SKILL.md">📄 SKILL.md</a>
+  </div>
+
+  <div class="metric">
+    <div><div class="v" style="color:var(--good)">19</div><div class="l">门禁项（17 浏览器 + 出片 2）</div></div>
+    <div><div class="v">12</div><div class="l">讲解动作（含交互暂停）</div></div>
+    <div><div class="v">9</div><div class="l">元素类型</div></div>
+    <div><div class="v" style="color:var(--accent-2)">0</div><div class="l">npm 依赖</div></div>
+    <div><div class="v">4</div><div class="l">示例课件</div></div>
+  </div>
+
+  <div class="hr"></div>
+
+  <!-- ---------------------------------------------------------- 背景 -->
+  <h2><span class="n">01</span>背景：为什么是现在</h2>
+  <p class="sub">三件事同时发生，把「做动画讲解」的门槛从<b>会做动画</b>降到了<b>会描述过程</b>。</p>
+  <div class="grid g3">
+    <div class="card tone-a">
+      <span class="tag">① 平台</span>
+      <h3>浏览器原生有了 GPU 与 3D</h3>
+      <p>WebGPU 已是 <b>W3C Candidate Recommendation</b>；Safari 26（2025-09）、Firefox 147 默认开启。
+         三维与 GPU 计算第一次不需要插件、不需要打包。</p>
+    </div>
+    <div class="card tone-b">
+      <span class="tag">② 库</span>
+      <h3>库的代价归零</h3>
+      <p>一个 CDN 链接就能上 <b>three.js</b>。本 skill 连 npm 依赖都没有 —— 引擎 + 系统 Chrome 就是全部。</p>
+    </div>
+    <div class="card tone-g">
+      <span class="tag">③ 模型</span>
+      <h3>写代码不再是瓶颈</h3>
+      <p>从「美术 + 剪辑 + 编程」降到<b>写一份场景数据</b>。
+         而场景数据是可 diff、可 lint、可被门禁管的。</p>
+    </div>
+  </div>
+
+  <!-- ---------------------------------------------------------- 问题 -->
+  <h2><span class="n">02</span>问题：PPT 的三个结构性缺陷</h2>
+  <p class="sub">不是审美问题。改字体、改配色都修不掉。</p>
+  <div class="grid g3">
+    <div class="card bad"><span class="tag">丢</span><h3>一屏 = 一帧</h3>
+      <p>时间维度被丢掉了，观众要自己脑补顺序。</p></div>
+    <div class="card bad"><span class="tag">压</span><h3>过程被压成一张图</h3>
+      <p>而过程往往才是知识 —— 曲线的定义就是它的构造过程。</p></div>
+    <div class="card bad"><span class="tag">盲</span><h3>好坏只能靠肉眼</h3>
+      <p>改一版，你不知道是好了还是坏了。</p></div>
+  </div>
+
+  <!-- ---------------------------------------------------------- 优势 -->
+  <h2><span class="n">03</span>优势：四条，每条都有数</h2>
+  <div class="grid g2">
+    <div class="card tone-a">
+      <span class="tag">优势 1 / 确定性时间轴</span>
+      <h3><code>render(t)</code> 是纯函数</h3>
+      <p><b>同一个时刻永远渲染出同一帧</b>，不管你怎么跳、跳几次。场景里禁止
+         <code>Date.now()</code> / <code>Math.random()</code>。</p>
+      <p>换来四件事：可 scrub · 可截图断言 · 可逐帧导视频 · 评审可复现。<br>
+         实测：同一 t 双渲染的差异 = <b>0 字节</b>。</p>
+    </div>
+    <div class="card tone-b">
+      <span class="tag">优势 2 / 过程可见</span>
+      <h3>一笔一笔，顺序就是知识</h3>
+      <p>12 行内核：<code>画面 = f(笔画序列, 进度)</code>。
+         笔尖只出现在<b>正在画的那一笔</b>上，观众始终知道"现在画到哪"。</p>
+      <p>已画好的笔画<b>只增不减</b> —— 观众的短期记忆不用重载。</p>
+    </div>
+    <div class="card tone-b">
+      <span class="tag">优势 3 / 注意力可控</span>
+      <h3>信息按你的节奏释放</h3>
+      <p><code>draw</code> 逐笔 · <code>spotlight/dim</code> 聚焦 · <code>countUp/morph</code> 数字滚上去 ·
+         <code>grow</code> 图表按数据长大。</p>
+      <p>纪律：<b>每 0.5 秒最多 3 个信息单元</b>（G9 门禁）。一页塞八个要点同时弹出，一个都记不住。</p>
+    </div>
+    <div class="card tone-g">
+      <span class="tag">优势 4 / 可验证</span>
+      <h3>讲解质量可以被断言</h3>
+      <p>15 项门禁在<b>真浏览器</b>里跑。不是"我看了一遍觉得还行"。</p>
+      <p>它们真的抓到过：笔尖"啪"地消失、四个元素同时弹出、旁白说不完、盒子里文字被裁掉。</p>
+    </div>
+  </div>
+
+  <div class="quote">门禁不只是防回归 —— 它能让作者发现自己<b>看不见</b>的问题。</div>
+
+  <!-- ---------------------------------------------------------- 场景 -->
+  <h2><span class="n">04</span>场景：有顺序，才值得逐笔</h2>
+  <table>
+    <tr><th style="width:50%">✅ 该用</th><th>❌ 不该用（用别的更好）</th></tr>
+    <tr>
+      <td>讲<b>机制</b>：算法怎么算、管线怎么走、状态怎么变</td>
+      <td class="no">要交付可在 PowerPoint 里继续编辑的 <b>PPTX</b> → 用 ppt-master / open-kimi-ppt</td>
+    </tr>
+    <tr>
+      <td>讲<b>构造过程</b>：一条曲线怎么被算出来、一个字形怎么从距离场浮出来</td>
+      <td class="no">要<b>可检索</b>的参考资料 → 用文档</td>
+    </tr>
+    <tr>
+      <td>讲<b>演进</b>：架构怎么一步步长成今天这样</td>
+      <td class="no">观众只有 30 秒、只要一个结论 → 一页大数字更有效</td>
+    </tr>
+    <tr>
+      <td>讲<b>排查顺序</b>：一次事故是怎么被定位的</td>
+      <td class="no">只是<b>并列的事实</b>对比 → 一次给完，逐笔只是慢</td>
+    </tr>
+  </table>
+  <div class="quote">判据只有一条：信息里有没有「顺序」。有顺序就逐笔，只是并列就一次给完。</div>
+
+  <!-- ---------------------------------------------------------- 人群 -->
+  <h2><span class="n">05</span>人群：四类人，四种用法</h2>
+  <div class="grid g2">
+    <div class="card">
+      <span class="tag">工程师 · 技术分享</span>
+      <h3>要讲机制、性能拐点、排查路径</h3>
+      <p>抓 → <code>draw</code> + <code>countUp</code> + <code>chart</code><br>
+         例：instancing 为什么快 3.4 倍（数字来自本机实测）</p>
+    </div>
+    <div class="card">
+      <span class="tag">老师 · 课程作者</span>
+      <h3>要讲构造过程</h3>
+      <p>抓 → <code>draw</code> + <code>morph</code> 打字机<br>
+         例：de Casteljau 逐层插值把一条曲线"算"出来</p>
+    </div>
+    <div class="card">
+      <span class="tag">产品 / 架构设计者</span>
+      <h3>要讲架构怎么演进过来</h3>
+      <p>抓 → <code>three</code> 3D + <code>moveTo</code> + <code>spotlight</code><br>
+         三维空间关系本身就是重点时才用 3D（并有 2D 降级）</p>
+    </div>
+    <div class="card">
+      <span class="tag">做 AI Agent 的人</span>
+      <h3>要让 agent 汇报它做了什么</h3>
+      <p>抓 → 场景数据可由模型生成，再用 15 项门禁验收<br>
+         动画说清"它按什么顺序做了什么"，比一段文字清楚得多</p>
+    </div>
+  </div>
+
+  <!-- ---------------------------------------------------------- 示例 -->
+  <h2><span class="n">06</span>四份能跑的示例</h2>
+  <table>
+    <tr><th>课件</th><th>主题</th><th style="width:120px">看</th><th style="width:110px">门禁</th></tr>
+    <tr><td><code>scenes.about.js</code></td><td>元课件：这个模式本身的背景/优势/场景/人群</td>
+        <td><a href="templates/deck.html?scenes=./scenes.about.js">播放</a></td><td class="yes">15/15</td></tr>
+    <tr><td><code>scenes.strokes.js</code></td><td>「按笔画」5 个 case：de Casteljau / A* / SDF / 边界</td>
+        <td><a href="templates/deck.html?scenes=./scenes.strokes.js">播放</a></td><td class="yes">15/15</td></tr>
+    <tr><td><code>scenes.instancing.js</code></td><td>instancing 为什么快 3.4 倍（含 three.js 3D 幕）</td>
+        <td><a href="templates/deck.html">播放</a></td><td class="yes">15/15</td></tr>
+    <tr><td><code>scenes.bindgroups.js</code></td><td>每帧重建 bind group 的代价：24.4ms → 2.04ms</td>
+        <td><a href="templates/deck.html?scenes=./scenes.bindgroups.js">播放</a></td><td class="yes">15/15</td></tr>
+  </table>
+
+  <!-- ---------------------------------------------------------- 门禁 -->
+  <h2><span class="n">07</span>19 项门禁：凭什么说做完了</h2>
+  <p class="sub">不是"我看了一遍觉得还行"。全部在 headless Chrome 里量真实 DOM 与像素。</p>
+  <table>
+    <tr><th style="width:78px">门禁</th><th>断言</th><th style="width:36%">抓什么</th></tr>
+    <tr><td><b>G0</b></td><td>CSS 里的每个 <code>#id</code> 必须在 DOM 里存在</td><td>选择器写错 → 元素丢掉定位、退化成 grid 行、把舞台挤变形。<b>这条门禁来自一次真实事故</b>：三个 id 写错，舞台顶部被裁 17px</td></tr>
+    <tr><td><b>G0b</b></td><td>主题落到 app 根：舞台/控制条/字幕条的 <code>--bg</code> 一致</td><td>半截主题（浅色舞台配深色控制条）</td></tr>
+    <tr><td><b>G1</b></td><td>能起来、校验器无错、console 无 error</td><td>语法错、CDN 挂、初始化顺序错</td></tr>
+    <tr><td><b>G2 / G2b / G2c</b></td><td>元素不越界 · 盒内文字不被裁切 · 文字层不重叠</td><td>看不到图的作者最容易漏的一类</td></tr>
+    <tr><td><b>G2d</b></td><td>三类遮挡实测为 0：覆盖层压内容 · 同一画布内标注互压 · 标注被画布裁掉</td><td>「看起来有点遮挡」的全部三类。探测点必须包含<b>每条旁白的时刻</b></td></tr>
+    <tr><td><b>G5b</b></td><td>字幕恒为单行</td><td>字幕换行 → 它占的安全带高度随文案变 → 作者没法定安全区</td></tr>
+    <tr><td><b>G11</b></td><td>扰动元素声明的 <code>data</code>，<b>画面必须跟着变</b></td><td><b>装饰性画面</b>：坐标硬编码的比例图，看着像回事但读不出任何一个值 —— 这是「内容简单」最深的根源</td></tr>
+    <tr><td><b>G3</b></td><td>每一幕的早/晚截图必须不同；3D 区域裁剪截图也要不同</td><td><b>静态 PPT 冒充动画</b>、WebGL 黑屏</td></tr>
+    <tr><td><b>G4</b></td><td>同一 t 两次渲染<b>逐字节相同</b>（含 canvas 像素签名）</td><td><code>Date.now</code> / <code>Math.random</code> 污染</td></tr>
+    <tr><td><b>G5</b></td><td>每条旁白在其时刻字幕已显示且文字一致</td><td>旁白与字幕错位</td></tr>
+    <tr><td><b>G6</b></td><td>预测题：选项数、标对错、答错有解释、答案被记录</td><td>点了没反应</td></tr>
+    <tr><td><b>G7</b></td><td>每个 canvas2d 平均 alpha &gt; 0</td><td><code>draw()</code> 没画东西</td></tr>
+    <tr><td><b>G8</b></td><td><code>?three=off</code> 后 3D 元素走 2D 降级<b>且仍在动</b></td><td>断网/内网时开天窗</td></tr>
+    <tr><td><b>G9</b></td><td>每 0.5s 首次出现的<b>信息单元</b> ≤ 3</td><td>一页 8 个元素同时弹出（认知过载）</td></tr>
+    <tr><td><b>G9b</b></td><td>同时生长的笔画 ≤ 4；生长时长占比 &gt; 85% 报警</td><td>一次画太多笔 / 一直画不停</td></tr>
+    <tr><td><b>G10</b></td><td>标记 <code>monotonic</code> 的画布：<b>可见笔画总长度只增不减</b></td><td>画好的东西被擦掉、闪烁</td></tr>
+    <tr><td><b>G11</b></td><td>扰动元素声明的 <code>data</code>：数值 ×1.6、分类数据去掉最后一项，画面必须变</td><td><b>装饰性画面</b>——看着像回事但读不出任何一个值</td></tr>
+    <tr><td><b>FRAMES / MP4</b></td><td>一键出片：帧直接管道进 ffmpeg，不落盘</td><td>视频链路是否真的通</td></tr>
+    <tr><td><b>G12</b></td><td>出片后取两帧，量字幕带亮度：旁白时刻必须明显亮于无旁白时刻</td><td>「声称字幕已烘焙、其实成片里没有」—— 这类只能靠量来防</td></tr>
+  </table>
+
+  <h3 style="margin-top:26px">一段值得记住的经历：G10 的度量改了三次</h3>
+  <table>
+    <tr><th style="width:30%">度量</th><th style="width:30%">结果</th><th>为什么错</th></tr>
+    <tr><td>alpha 之和</td><td class="no">报 8.9% / 2% 下降</td><td>不透明的<b>笔尖移开</b>时，压在下面的半透明线露出来 → 度量伪影</td></tr>
+    <tr><td>像素足迹</td><td class="no">仍报 0.9% 下降</td><td>笔尖自己就是一块不透明区域，<b>它淡出必然减少足迹</b></td></tr>
+    <tr><td><b>可见笔画总长度</b></td><td class="yes">全部通过</td><td>只由笔画本身决定，对光标/光晕/装饰完全免疫 ✅</td></tr>
+  </table>
+  <p class="sub" style="margin-top:12px">
+    <b>结论比门禁本身更重要</b>：代理量会把"光标移动"和"内容被擦掉"混为一谈。要量你真正关心的那个量。
+  </p>
+
+  <!-- ---------------------------------------------------------- 链路 -->
+  <h2><span class="n">08</span>这个 skill 的链路：素材 → 骨架 → 打磨 → 门禁 → 出片</h2>
+  <p class="sub">它一开始只有「引擎 + 门禁」，缺了最前面那一环 ——
+     所以每份课件都从空文件手写，作者的注意力全花在坐标和画布上，内容自然停在「能跑」的水平。
+     <code>from-md</code> 就是补上的那一环。</p>
+  <table>
+    <tr><th style="width:26%">环节</th><th>做什么</th><th style="width:30%">命令 / 判据</th></tr>
+    <tr><td><b>① 素材 → 骨架</b></td>
+        <td>把 Markdown（文档/论文笔记/复盘）变成<b>能跑、能过全部门禁</b>的课件骨架：
+            自动搭出 主张 / 机制 / 量级 / 边界 / 溯源（claim → 原文 <code>file:line</code>），
+            并打印「待你补齐」的清单</td>
+        <td><code>node scripts/from-md.mjs doc.md --out=...</code><br>
+            实测：抽出 88 个数字，生成物一次通过 16 项门禁</td></tr>
+    <tr><td><b>② 打磨内容</b></td>
+        <td>看体检表，把缺的补上：<b>有数字 · 数字有参照 · 有边界</b>。
+            把通用柱状图换成真正解释这件事的画法</td>
+        <td><code>node scripts/lint-scenes.mjs</code><br>
+            输出每幕的深度体检表</td></tr>
+    <tr><td><b>③ 门禁</b></td>
+        <td>16 项浏览器门禁 + 静态 lint + 链接检查</td>
+        <td><code>./scripts/check-all.sh</code><br>
+            5 份课件全量约 60 秒</td></tr>
+    <tr><td><b>④ 出片</b></td>
+        <td>确定性时间轴逐帧 seek → 帧直接管道进 ffmpeg，不落盘</td>
+        <td><code>--mp4=out/x.mp4 --size=1920x1080</code></td></tr>
+  </table>
+
+  <h3 style="margin-top:26px">内容深度的可测定义</h3>
+  <p class="sub">「内容简单」不是主观感受，是论证链缺环。每一幕都该有这五环，
+     其中三环已经被工具量化：</p>
+  <div class="grid g3">
+    <div class="card tone-a"><span class="tag">主张</span><h3>一句可反驳的话</h3>
+      <p>不是话题（"性能优化"），是判断（"CPU 侧比 GPU 侧更容易拿到大倍数"）。</p></div>
+    <div class="card tone-b"><span class="tag">机制 · G11 管</span><h3>画面必须承载信息</h3>
+      <p>扰动 <code>data</code>，画面必须跟着变。装饰性画面会被门禁直接抓住。</p></div>
+    <div class="card tone-g"><span class="tag">量级 · lint 管</span><h3>数字 + 参照</h3>
+      <p>有数字没有参照，观众不知道它是大是小。两者都要有。</p></div>
+    <div class="card tone-g"><span class="tag">边界 · lint 管</span><h3>什么时候不成立</h3>
+      <p>只有支持证据的讲解是宣传。边界句是可信度的来源。</p></div>
+    <div class="card"><span class="tag">推论</span><h3>观众能自己算一步</h3>
+      <p>预测题 + 可核对的溯源，让观众离开课件后还能推下去。</p></div>
+  </div>
+
+  <!-- ---------------------------------------------------------- 用 -->
+  <h2><span class="n">09</span>怎么用</h2>
+<pre><code>cd ~/.agents/skills/animated-lesson
+
+./serve.sh                      # 预览（默认 :8099）
+node scripts/lint-scenes.mjs    # 静态校验，毫秒级，作者循环里一直跑
+node scripts/verify.mjs         # 15 项浏览器门禁
+
+# 一键出片：帧直接管道进 ffmpeg，不落盘
+node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
+     --mp4=out/mine.mp4 --fps=24 --size=1920x1080</code></pre>
+
+  <div class="quote">「按笔画」的价值是顺序，不是动起来。没有顺序信息时，动画只是慢。</div>
+
+  <div class="foot">
+    <b>边界</b>：不做音频轨合成（TTS 走浏览器 <code>speechSynthesis</code>；导出视频无声、字幕已烘焙进画面）·
+    不做幕间转场（会掩盖内容，也让确定性截图变复杂）·
+    <code>three</code> 只做静态场景 + 逐帧状态更新（要物理请自行接，但 <code>t → 状态</code> 必须是纯函数）·
+    验证器需要 Chrome（CI 里没有时只能跑静态 lint）。<br><br>
+    <b>文档</b>：
+    <a href="SKILL.md">SKILL.md</a> ·
+    <a href="references/scene-dsl.md">DSL 参考</a> ·
+    <a href="references/stroke-drawing.md">按笔画模式参考</a> ·
+    <a href="references/authoring-gates.md">门禁与失败模式库</a> ·
+    <a href="references/design-notes.md">设计取舍（从 OpenMAIC 抄了什么）</a> ·
+    <a href="references/skill-roadmap.md">skill 优化路线图</a><br><br>
+    <b>溯源</b>：WebGPU / Safari 26 / Firefox 147 的说法在
+    <code>~/Projects/webgpu/docs/webgpu-deep-dive.md</code> 里核对过；性能数字来自该项目的
+    <code>bench/results/canonical-full-suite.json</code>（Apple M5 Pro / Chrome 153 / Metal 4 实测）。
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>动画讲解课</title>
+<link rel="stylesheet" href="../engine/scene.css">
+<style>
+  /* 课件壳：引擎负责 #stage 与底部控制条，这里只留舞台容器 */
+  #deck-app { grid-template-rows: 1fr 46px; }
+</style>
+</head>
+<body>
+<div id="deck-app">
+  <div id="deck-viewport"></div>
+</div>
+
+<script type="module">
+  import { createDeck } from '../engine/scene.js';
+
+  // 换课件：deck.html?scenes=./scenes.bindgroups.js
+  const scenesPath = new URLSearchParams(location.search).get('scenes') || './scenes.instancing.js';
+  const mod = await import(scenesPath);
+  const spec = mod.deck ?? mod.default;
+  const PROVENANCE = mod.PROVENANCE ?? [];
+
+  const deck = createDeck(spec, {
+    mount: '#deck-viewport',
+    autoplay: false,        // 讲课时手动推进；录制时用 ?autoplay=1
+    narrate: new URLSearchParams(location.search).get('narrate') === '1',
+    expose: true,           // window.DECK —— verify.mjs 靠它做断言
+  });
+
+  // 给验证脚本与作者一个统一的读数口
+  window.DECK_INFO = {
+    title: spec.meta.title,
+    theme: spec.meta.theme ?? 'ink',
+    scenes: spec.scenes.map((s) => ({ id: s.id, title: s.title, duration: s.duration, elements: s.elements.length, beats: s.beats.length, quiz: !!s.quiz, speakAt: (s.beats ?? []).filter((b) => b.action === 'speak').map((b) => b.at) })),
+    provenance: PROVENANCE,
+  };
+
+  if (new URLSearchParams(location.search).get('autoplay') === '1') deck.play();
+
+  // 顶部加载即渲染：保证第一帧就可截图（确定性验证需要）
+  window.DECK_READY = deck;
+</script>
+</body>
+</html>
