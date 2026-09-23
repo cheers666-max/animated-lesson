@@ -1,0 +1,45 @@
+name: checks
+
+# CI 只 gate **不需要 Chrome** 的部分：静态校验 + 链接检查。
+#
+# 为什么不上浏览器门禁：19 项里有 16 项靠 CDP 驱动真实 Chrome，
+# 而它们在 CI 上的失败几乎总是「环境噪音」（headless 没有稳定 WebGL、
+# 定时器抖动、字体缺失导致文字盒宽度不同），不是真回归。
+# 一个会随机变红的 CI 会被忽略 —— 那比没有 CI 更糟。
+#
+# 浏览器门禁请在本地跑：./scripts/check-all.sh
+# 若确实想要 CI 版，先在 runner 上验证 verify.mjs 稳定，
+# 再把它加成 blocking step，别用 continue-on-error 糊过去。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 静态校验（含内容深度体检）
+        run: node scripts/lint-scenes.mjs
+
+      - name: 本地链接可达性
+        run: node scripts/check-links.mjs
+
+      - name: 全部脚本语法可解析
+        run: |
+          for f in $(find . -name '*.mjs' -not -path './node_modules/*'); do
+            node --check "$f" || exit 1
+          done
+          echo "✓ 所有 .mjs 语法正确"
+
+      - name: 生成的产物不该被提交（out/ 是源码之外的东西）
+        run: |
+          test -f .gitignore && grep -q 'out/' .gitignore && echo "out/ 已被忽略" || true

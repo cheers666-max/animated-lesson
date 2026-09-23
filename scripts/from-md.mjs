@@ -24,7 +24,7 @@
  *   node scripts/from-md.mjs docs/foo.md --out=... --max-scenes=6 --level=2 --theme=ink
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { resolve, dirname, basename, relative } from 'node:path';
+import { resolve, dirname, basename, relative, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -335,4 +335,18 @@ console.log(`  ${sections.length} 幕 / 共 ${all.length} 个小节${all.length 
 console.log(`  ${built.reduce((a, b) => a + b.scene.duration, 0)} 秒 · 数字 ${built.reduce((a, b) => a + b.nums.length, 0)} 个 · 带参照 ${built.reduce((a, b) => a + b.withBase.length, 0)} 个 · 有边界 ${built.filter((b) => b.hasBoundary).length} 幕`);
 console.log(`\n${C.bold('  待你补齐（生成器不会替你编内容）：')}`);
 gaps.forEach((g) => console.log(C.yellow('    ⚠ ' + g)));
-console.log(`\n  下一步：\n    node scripts/lint-scenes.mjs ${relative(ROOT, OUT)}     ${C.dim('# 看内容深度体检表')}\n    node scripts/verify.mjs --deck='templates/deck.html?scenes=./${basename(OUT)}'\n`);
+// 打印"下一步"时路径必须真的能敲。
+// 踩过的坑：早期用 relative(ROOT, OUT)，而 ROOT 是**脚本自己**的位置 ——
+// 输入文档在 /tmp 时算出 ../../../tmp/x.js，照着敲跑不通。
+// 正确做法：lint 用「相对当前工作目录」，verify 用「相对 templates/」（deck 是相对它加载 scenes 的）。
+const relCwd = relative(process.cwd(), OUT) || basename(OUT);
+const relTpl = relative(join(ROOT, 'templates'), OUT);
+const scenesArg = relTpl.startsWith('.') ? relTpl : `./${relTpl}`;
+const insideTpl = !relTpl.startsWith('..');
+console.log(`\n  下一步：\n    node scripts/lint-scenes.mjs ${relCwd}     ${C.dim('# 看内容深度体检表')}`);
+if (insideTpl) {
+  console.log(`    node scripts/verify.mjs --deck='templates/deck.html?scenes=${scenesArg}'`);
+} else {
+  console.log(`    ${C.dim('# 文件在 templates/ 外面，deck 加载不到 —— 建议 --out=templates/…')}`);
+}
+console.log('');
