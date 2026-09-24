@@ -1,9 +1,12 @@
 # 帧导出残留（正常出片是「帧直接管道进 ffmpeg」，不落盘；--frames= 才会写 PNG）
+#
+# ⚠️ 不要写 `*.png` —— 那会把 templates/assets/ 里的真实素材一起排掉。
+#    踩过：bezier.png 因此没进仓库，新克隆里 G13 报红。
+#    只忽略**帧导出目录**，不按扩展名忽略。
 frames/
 shots/
-*.png
+out/frames/
+out/shots/
 
 .DS_Store
 *.log
-
-# CI 产物
