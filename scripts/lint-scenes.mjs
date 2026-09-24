@@ -69,10 +69,15 @@ function lintSource(file, src) {
  * 只有显式声明 h 的元素能在这里精确判；自动高度的文本/列表由 verify.mjs 的 G2d 实测兜底。
  */
 const SAFE = { top: 3, bottom: 92, autoWarn: 90 };
+// 满幅背景图/色块是 PPT 的常规手法，不该被安全区拦住 ——
+// 但要**显式**写 bleed: true，否则视为漏了 y（见下面的 continue）。
 function lintSafeZone(spec) {
   const errors = [], warnings = [];
   for (const [si, sc] of spec.scenes.entries()) {
     for (const el of sc.elements ?? []) {
+      // bleed: 出血背景（满幅图/色块）—— 它本来就该铺满，安全区管的是**内容**。
+      // 要求显式声明，这样"铺满"是作者的决定，而不是漏了 y。
+      if (el.bleed === true) continue;
       if (typeof el.y === 'number' && el.y < SAFE.top) {
         errors.push(`scenes[${si}](${sc.id}).${el.id}: y=${el.y}% < ${SAFE.top}% —— 会顶到面包屑带`);
       }

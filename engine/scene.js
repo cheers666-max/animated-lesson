@@ -65,7 +65,7 @@ export const ACTIONS = {
 /** reveal 的 stagger 由 deck 展开成多个 reveal，不单独实现。 */
 
 // ---------------------------------------------------------------- 校验器（与运行时同源）
-const KNOWN_TYPES = ['text', 'shape', 'code', 'metric', 'list', 'chart', 'canvas2d', 'three', 'annot'];
+const KNOWN_TYPES = ['text', 'shape', 'code', 'metric', 'list', 'chart', 'canvas2d', 'three', 'annot', 'image'];
 const KNOWN_ACTIONS = Object.keys(ACTIONS).concat(['stagger', 'speak', 'zoomTo', 'reset', 'pause']);
 const CHARS_PER_SEC = 4.6;      // 中文讲解语速（字/秒），用于时长预算
 const SCENE_CAP = 60;           // 单场景硬上限（秒）
@@ -115,9 +115,22 @@ export function validate(spec) {
       if (el.x < 0 || el.y < 0 || el.x + el.w > 100 + 1e-6) E(`${e}: 越界 x=${el.x} w=${el.w}（x+w 必须 ≤ 100）`);
       if (el.y > 100) E(`${e}: y=${el.y} 超出画面`);
       if (el.type === 'text' && !el.text) E(`${e}: text 元素缺 text`);
+      if (el.type === 'code' && !el.code) {
+        if (el.text) W(`${e}: code 元素建议用 code: 而不是 text:（两者都认，但 code: 才是规范字段）`);
+        else E(`${e}: code 元素缺 code`);
+      }
       if (el.type === 'canvas2d' && typeof el.draw !== 'function') E(`${e}: canvas2d 需要 draw(ctx, t, el, api) 函数`);
       if (el.type === 'three' && typeof el.init !== 'function') E(`${e}: three 需要 init(THREE, el, api) -> update(t, el, api)`);
       if (el.type === 'metric' && typeof el.value !== 'number') W(`${e}: metric 建议给初始 value（否则从 0 开始）`);
+      if (el.bleed && ['text', 'list', 'code', 'metric'].includes(el.type)) {
+        E(`${e}: bleed 只用于背景（image/shape）—— 内容元素出血会被字幕条压住`);
+      }
+      if (el.type === 'image') {
+        if (!el.src) E(`${e}: image 需要 src`);
+        if (!el.credit) E(`${e}: image 没写 credit —— 图片来源必须标出来（版权/出处），自绘的写 "自绘"`);
+        if (el.fit && !['cover', 'contain'].includes(el.fit)) E(`${e}: fit 只能是 cover / contain`);
+        if (el.ken != null && (typeof el.ken !== 'number' || el.ken < 0 || el.ken > 0.6)) E(`${e}: ken 是推近幅度，取 0~0.6`);
+      }
     }
 
     const beats = Array.isArray(sc.beats) ? sc.beats : [];
@@ -255,7 +268,7 @@ function renderAnnot(el, node, s) {
 function renderCode(el, node, s) {
   if (!node.dataset.built) {
     node.className = 'el el-code';
-    node.innerHTML = el.code
+    node.innerHTML = (el.code ?? el.text ?? '')
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/\b(const|let|var|function|return|if|else|for|of|await|async|new|import|export|class)\b/g, '<span class="k">$1</span>')
       .replace(/(\/\/[^\n]*)/g, '<span class="c">$1</span>')
@@ -305,6 +318,50 @@ function renderChart(el, node, s) {
     f.style.height = `${(d.v / max) * 88 * g}%`;
     bar.querySelector('.v').style.opacity = String(g);
   });
+}
+
+/**
+ * 图片。
+ * 三件 PPT 必备但容易漏的事：
+ *  ① 缺图不能开天窗 —— 画虚线占位框并标 data-placeholder，交付时一眼能看出哪张没拿到；
+ *  ② 版权/出处必须标在画面上（credit），而不是只写在交付说明里；
+ *  ③ 缓慢推近（ken）用 state 的 p 驱动 —— 是**时间的函数**，不是 CSS 动画，
+ *     所以逐帧导出不会闪、拖到任意时刻都对。
+ */
+function renderImage(el, node, s) {
+  if (!node.dataset.built) {
+    node.className = 'el el-image';
+    node.dataset.fit = el.fit ?? 'cover';
+    const img = document.createElement('img');
+    img.alt = el.alt ?? '';
+    img.decoding = 'sync';
+    img.addEventListener('load', () => { node.dataset.loaded = '1'; });
+    img.addEventListener('error', () => {
+      node.dataset.loaded = '0';
+      node.dataset.placeholder = '1';
+      node.innerHTML = `<div class="ph"><span>缺图</span><em>${el.placeholder ?? el.src}</em></div>`;
+    });
+    img.src = el.src;
+    node.append(img);
+    if (el.credit) {
+      const c = document.createElement('span');
+      c.className = 'credit';
+      c.textContent = el.credit;
+      node.append(c);
+    }
+    node.dataset.built = '1';
+    (node._assets ??= []).push(new Promise((res) => {
+      if (img.complete) res(img.naturalWidth > 0);
+      else { img.addEventListener('load', () => res(true)); img.addEventListener('error', () => res(false)); }
+    }));
+  }
+  const img = node.querySelector('img');
+  if (!img) return;
+  // 确定性缓慢推近：p 由 draw 动作推进，1 + ken*p 是 t 的纯函数
+  const k = el.ken ? 1 + el.ken * ease(s.p ?? 0) : 1;
+  img.style.transform = `scale(${k.toFixed(4)})`;
+  const c = node.querySelector('.credit');
+  if (c) c.style.opacity = String(s.opacity);
 }
 
 // ---------------------------------------------------------------- 「按笔画」工具箱
@@ -527,7 +584,7 @@ function renderThree(el, node, s, api) {
 const RENDERERS = {
   text: renderText, shape: renderShape, annot: renderAnnot, code: renderCode,
   metric: renderMetric, list: renderList, chart: renderChart,
-  canvas2d: renderCanvas2d, three: renderThree,
+  canvas2d: renderCanvas2d, three: renderThree, image: renderImage,
 };
 
 // ---------------------------------------------------------------- 场景编译
@@ -625,8 +682,26 @@ export function createDeck(spec, opts = {}) {
   root.append(stage);
 
   const boot = performance.now();
+  /**
+   * 资源预加载 —— 这是确定性的一部分，不是优化。
+   * 图片是异步加载的：如果第一帧截图时图还没到、第二帧到了，
+   * G4（同一 t 双渲染逐字节相同）就会随机变红，而且这是**假回归**，
+   * 会训练作者忽略这条门禁。所以：开播前把全部图片解码完，再 resolve assetsReady。
+   * 缺图也算 resolve（值是 false），由 G13 去报错 —— 不能让一张图卡住整个课件。
+   */
+  const imageUrls = [...new Set((spec.scenes ?? []).flatMap((sc) =>
+    (sc.elements ?? []).filter((e) => e.type === 'image' && e.src).map((e) => e.src)))];
+  const assetsReady = Promise.all(imageUrls.map((src) => new Promise((res) => {
+    const im = new Image();
+    im.onload = () => res({ src, ok: im.naturalWidth > 0, w: im.naturalWidth, h: im.naturalHeight });
+    im.onerror = () => res({ src, ok: false, w: 0, h: 0 });
+    im.src = src;
+  })));
+
   const deck = {
     spec, report, stage, root,
+    assetsReady,
+    assets: [],
     index: 0, t: 0, playing: false, tGlobal: 0, frames: 0,
     scenes: [],
     // 确定性：t 只能通过 seek / tick 改变，渲染永远读 t
@@ -823,6 +898,8 @@ export function createDeck(spec, opts = {}) {
     deck.frames++;
     requestAnimationFrame(tick);
   }
+
+  assetsReady.then((r) => { deck.assets = r; });
 
   /**
    * 交互式暂停：讲到关键处停下来，让观众先想。

@@ -55,7 +55,7 @@ draw(ctx, t, el, api)   // t = 场景内秒数。它是输入，不是时钟。
 | B2 | **写元素**：只用百分比定位，两栏用 `4/44` + `52/44`；内容按 主张/机制/量级/边界 组织 | `references/scene-dsl.md` · `references/skill-roadmap.md` | `validate()` 无越界错误 |
 | B3 | **写动作**：每个元素至少要有一个动作（否则是死元素） | 动作目录 | 无"死元素"警告 |
 | B4 | **做动画载体**：canvas2d 画过程，three 画空间，metric 画数字 | `draw(ctx,t,...)` / `init(THREE,...)` | 静态 lint 全绿 |
-| B5 | **上浏览器验**：`node scripts/verify.mjs` | 18 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感） |
+| B5 | **上浏览器验**：`node scripts/verify.mjs` | 21 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感） |
 | B6 | **写 3D 的降级路径**：`fallback.boxes` 与 3D 共用同一条时间表 | `submissionAt(t)` 模式 | G8 通过（`?three=off` 仍在动） |
 | B7 | **加旁白与预测题** | `speak` / `quiz` | G5、G6 通过 |
 | B8 | **出片** | `--mp4=out/x.mp4 --size=1920x1080` | 得到 1080p mp4（帧不落盘） |

@@ -220,3 +220,24 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
   backdrop-filter: blur(6px); z-index: 6;
 }
 #deck-pause[data-on="1"] { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+
+/* ---------------------------------------------------------------- 图片 */
+.el-image { overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.el-image img { width: 100%; height: 100%; display: block; will-change: transform; transform-origin: center; }
+.el-image[data-fit="cover"] img { object-fit: cover; }
+.el-image[data-fit="contain"] img { object-fit: contain; }
+/* 版权/出处必须标在画面上 —— 不能只写在交付说明里 */
+.el-image .credit {
+  position: absolute; right: 6px; bottom: 4px; font-size: 10px; letter-spacing: .02em;
+  color: #fff; background: rgba(0,0,0,.45); padding: 1px 6px; border-radius: 4px;
+  pointer-events: none; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 缺图占位：虚线框 + 说明。缺图绝不能开天窗 —— 一眼要能看出哪张没拿到 */
+.el-image[data-placeholder="1"] { border: 1.5px dashed var(--line); background: transparent; }
+.el-image .ph {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: 6px;
+  align-items: center; justify-content: center; text-align: center; padding: 8px;
+  color: var(--muted); font-size: 12px;
+}
+.el-image .ph span { font-size: 13px; color: var(--bad); font-weight: 600; }
+.el-image .ph em { font-style: normal; font-size: 11px; opacity: .8; word-break: break-all; }

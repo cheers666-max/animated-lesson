@@ -123,6 +123,8 @@ await send('Page.navigate', { url }, S);
 
 // ---------------------------------------------------------------- G1 boot
 let info = null;
+let assets = [];
+let imageEls = [];
 try {
   await ev(`(async () => {
     const t0 = Date.now();
@@ -137,6 +139,18 @@ try {
   info = JSON.parse(info);
   const rep = info.report;
   add('G1', true, '课件启动', `${info.info.scenes.length} 幕 · ${(info.state.total / 60).toFixed(1)} 分钟 · three=${await ev('window.DECK && !!window.DECK.stage')}`);
+  // 图片必须先解码完再跑任何截图门禁。
+  // 否则「第一帧图没到、第二帧到了」会让 G4 随机变红 —— 假回归会训练作者忽略门禁。
+  await ev(`window.DECK.assetsReady`);
+  assets = await ev(`window.DECK.assets.map(a => ({ src: a.src, ok: a.ok, w: a.w, h: a.h }))`);
+  imageEls = await ev(`(() => {
+    const out = [];
+    (window.DECK.spec.scenes ?? []).forEach((sc, si) => (sc.elements ?? []).forEach((el) => {
+      if (el.type === 'image') out.push({ si, id: el.id, src: el.src, credit: el.credit ?? null, fit: el.fit ?? 'cover', ken: el.ken ?? 0 });
+    }));
+    return out;
+  })()`);
+
   if (rep.errors?.length) add('G1', false, '校验器报错', rep.errors.join(' | '));
   if (rep.warnings?.length) warn(`${rep.warnings.length} 条校验提示`, rep.warnings.slice(0, 3).join(' | '));
 } catch (err) {
@@ -187,6 +201,23 @@ if (scenes.length) {
   const dead = ids.filter((id) => !live.includes(id));
   add('G0', dead.length === 0, 'CSS 里没有死选择器',
     dead.length ? `这些 #id 在 DOM 里不存在（样式全部失效）：${dead.join(', ')}` : `${ids.length} 个 id 选择器全部命中`);
+}
+
+// ---------------------------------------------------------------- G13 图片
+// 没有图片的 deck 不像 PPT；而缺图和没标出处是交付里最容易糊过去的两件事。
+if (scenes.length && imageEls.length) {
+  const bySrc = new Map(assets.map((a) => [a.src, a]));
+  const broken = imageEls.filter((e) => !bySrc.get(e.src)?.ok);
+  const noCredit = imageEls.filter((e) => !e.credit);
+  const okAll = !broken.length && !noCredit.length;
+  const dims = [...new Set(imageEls.map((e) => { const a = bySrc.get(e.src); return a?.ok ? `${a.w}×${a.h}` : null; }).filter(Boolean))];
+  add('G13', okAll, '图片真的加载成功且标了来源',
+    okAll
+      ? `${imageEls.length} 张图全部解码成功（${dims.join(' / ')}），每张都带 credit`
+      : [broken.length ? `${broken.length} 张图没加载成功：${broken.map((e) => `${e.id}(${e.src})`).join(', ')} —— 缺图不能开天窗，换源或删掉这一页` : '',
+         noCredit.length ? `${noCredit.length} 张图没写 credit：${noCredit.map((e) => e.id).join(', ')} —— 版权/出处必须标在画面上` : ''].filter(Boolean).join(' | '));
+} else if (scenes.length && !imageEls.length) {
+  warn('这份课件没有图片元素 —— 纯文字/图形的 deck 不像 PPT，考虑配图');
 }
 
 // ---------------------------------------------------------------- G0b 主题覆盖到整个外壳
@@ -290,8 +321,13 @@ if (scenes.length) {
           const lines = rg2.getClientRects().length;      // 真实行盒数量，不受 padding 干扰
           return { id, x: r.left, y: r.top, w: r.width, h: r.height, lines };
         }).filter(Boolean);
+        // 出血背景（bleed）是**故意**铺到字幕条底下的 —— 字幕自带底色药丸，
+        // 压住背景图不算遮挡。只对内容元素判。
+        const bleed = new Set((window.DECK.spec.scenes[window.DECK.index]?.elements ?? [])
+          .filter((e) => e.bleed === true).map((e) => e.id));
         const dom = [];
         for (const n of document.querySelectorAll('#stage [data-el]')) {
+          if (bleed.has(n.dataset.el)) continue;
           const cs = getComputedStyle(n);
           if (cs.display === 'none' || Number(cs.opacity) < 0.05) continue;
           const rg = document.createRange(); const rects = []; const w2 = document.createTreeWalker(n, NodeFilter.SHOW_TEXT);

@@ -72,7 +72,7 @@
   </div>
 
   <div class="metric">
-    <div><div class="v" style="color:var(--good)">19</div><div class="l">门禁项（17 浏览器 + 出片 2）</div></div>
+    <div><div class="v" style="color:var(--good)">21</div><div class="l">门禁项（19 浏览器 + 出片 2）</div></div>
     <div><div class="v">12</div><div class="l">讲解动作（含交互暂停）</div></div>
     <div><div class="v">9</div><div class="l">元素类型</div></div>
     <div><div class="v" style="color:var(--accent-2)">0</div><div class="l">npm 依赖</div></div>
@@ -218,7 +218,7 @@
   </table>
 
   <!-- ---------------------------------------------------------- 门禁 -->
-  <h2><span class="n">07</span>19 项门禁：凭什么说做完了</h2>
+  <h2><span class="n">07</span>21 项门禁：凭什么说做完了</h2>
   <p class="sub">不是"我看了一遍觉得还行"。全部在 headless Chrome 里量真实 DOM 与像素。</p>
   <table>
     <tr><th style="width:78px">门禁</th><th>断言</th><th style="width:36%">抓什么</th></tr>
@@ -240,6 +240,7 @@
     <tr><td><b>G10</b></td><td>标记 <code>monotonic</code> 的画布：<b>可见笔画总长度只增不减</b></td><td>画好的东西被擦掉、闪烁</td></tr>
     <tr><td><b>G11</b></td><td>扰动元素声明的 <code>data</code>：数值 ×1.6、分类数据去掉最后一项，画面必须变</td><td><b>装饰性画面</b>——看着像回事但读不出任何一个值</td></tr>
     <tr><td><b>FRAMES / MP4</b></td><td>一键出片：帧直接管道进 ffmpeg，不落盘</td><td>视频链路是否真的通</td></tr>
+    <tr><td><b>G13</b></td><td>图片必须真的解码成功（naturalWidth&gt;0）且带 credit</td><td>缺图开天窗、图片没标出处</td></tr>
     <tr><td><b>G12</b></td><td>出片后取两帧，量字幕带亮度：旁白时刻必须明显亮于无旁白时刻</td><td>「声称字幕已烘焙、其实成片里没有」—— 这类只能靠量来防</td></tr>
   </table>
 

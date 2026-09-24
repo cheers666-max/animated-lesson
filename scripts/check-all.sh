@@ -11,7 +11,7 @@ run node scripts/lint-scenes.mjs
 run node scripts/check-links.mjs
 
 if [ "${1:-}" != "--fast" ]; then
-  for s in about strokes instancing bindgroups from-md-demo; do
+  for s in about strokes instancing bindgroups photo from-md-demo; do
     case "$s" in
       instancing) DECK="templates/deck.html" ;;
       *)          DECK="templates/deck.html?scenes=./scenes.$s.js" ;;

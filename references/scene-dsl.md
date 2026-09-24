@@ -30,7 +30,41 @@ export const deck = {
 
 ---
 
-## 二、元素类型（9 种）
+## 二、元素类型（10 种）
+
+### `image` —— 真实图片 / 照片
+
+```js
+{ id: 'ph', type: 'image',
+  src: './assets/brush.jpg',   // ⚠️ 相对 deck.html（不是相对本场景文件）
+  fit: 'cover',                // cover 裁切 / contain 完整
+  ken: 0.14,                   // 确定性缓慢推近幅度 0~0.6，用 draw 动作把 p 从 0 推到 1
+  bleed: true,                 // 出血背景（满幅）—— 显式声明才豁免安全区
+  credit: '作者 · 来源 · 许可',  // 必填，标在画面右下角
+  alt: '无障碍描述' }
+```
+
+- **推近是时间的函数**：`scale = 1 + ken * ease(state.p)`，所以可拖、可断言、出片不闪。
+  **不要**用 CSS animation —— 它有自己的时钟，逐帧 seek 取不出进度，G4 会随机变红。
+- **`credit` 必填**（校验器 error）：出处标在画面上，不是只写在交付说明里。
+- **缺图不开天窗**：加载失败画虚线占位框 + `data-placeholder="1"`，**G13 报红**。
+- **路径基准**：`src` 相对 `deck.html`。deck.html 在 `templates/` 下，所以资源放
+  `templates/assets/`，写 `./assets/x.jpg`。（放仓库根的 `assets/` 会 404。）
+
+### `bleed` —— 出血元素
+
+满幅背景图/色块是常规手法，但会撞上安全区（内容 ∈ [3%, 92%]）。
+解决方式是**显式声明**，而不是放宽规则：
+
+```js
+{ id: 'scrim', type: 'shape', bleed: true, static: true, x: 48, y: 0, w: 6, h: 100 }
+```
+
+- `lint-scenes.mjs`：`bleed: true` 跳过安全区检查
+- `G2d`：`bleed` 元素不参与"覆盖层压内容"（字幕自带底色，压住背景不算遮挡）
+- 引擎：`bleed` 用在 `text/list/code/metric` 上 → 报错（内容出血会被字幕条压住）
+
+
 
 | type | 用途 | 关键字段 |
 |---|---|---|

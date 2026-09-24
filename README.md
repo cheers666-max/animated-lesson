@@ -55,8 +55,8 @@ Web 原生（`canvas2d` + WGSL 风格的 `three` 可选），**零 npm 依赖** 
 node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 
 node scripts/lint-scenes.mjs      # 静态校验 + 内容深度体检（毫秒级）
-node scripts/verify.mjs           # 19 项浏览器门禁
-./scripts/check-all.sh            # 交付前一键：lint + 链接 + 5 份课件全量门禁
+node scripts/verify.mjs           # 19 项浏览器断言 + 出片链路
+./scripts/check-all.sh            # 交付前一键：lint + 链接 + 6 份课件全量门禁
 
 # 一键出片：帧直接管道进 ffmpeg，不落盘
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
@@ -65,7 +65,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 
 ---
 
-## 19 项门禁：凭什么说"讲清楚了"
+## 21 项门禁：凭什么说"讲清楚了"
 
 一半是**技术门禁**（防止坏了），一半是**教学门禁**（防止空转）。
 
@@ -89,6 +89,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | **G10** | 标记单调的画布：可见笔画长度只增不减 | 画好的东西被擦掉、闪烁 |
 | **G11** | 扰动 `data`，**画面必须跟着变** | **装饰性画面**：看着像回事但读不出任何一个值 |
 | **FRAMES / MP4** | 一键出片，帧直接管道进 ffmpeg | 视频链路是否真的通 |
+| **G13** | `image` 必须真的解码成功且带 `credit` | 缺图开天窗、图片没标出处 |
 | **G12** | 出片后量字幕带亮度：旁白时刻必须明显亮于无旁白时刻 | 「声称字幕已烘焙、其实成片里没有」 |
 
 **G0 / G2d / G11 / G12 都是被真实事故逼出来的**，不是先想出来的门禁：
@@ -102,7 +103,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | 目录 | 内容 |
 |---|---|
 | `engine/` | 引擎（CSS 主题 + 场景内核 + three 适配器） |
-| `templates/` | 五份参考课件（about / strokes / instancing / bindgroups / from-md-demo）+ 可跑壳 |
+| `templates/` | 六份参考课件（about / strokes / instancing / bindgroups / photo / from-md-demo）+ 可跑壳 |
 | `scripts/` | **素材→骨架**（from-md）+ 静态校验（含内容深度体检）+ 浏览器门禁 + 一键出片 + 链接检查 + 交付前一键 |
 | `references/` | DSL 参考 · 按笔画模式 · 门禁与失败模式库 · 设计取舍 · **skill 优化路线图** |
 | `out/` | 生成的视频（不是源码，用上面命令重新生成） |
