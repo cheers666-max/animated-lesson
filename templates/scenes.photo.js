@@ -27,14 +27,14 @@ export const deck = {
           x: 52, y: 0, w: 48, h: 100, ken: 0.14, z: 0,
           credit: 'Elstner Hilton, 1911 · Wikimedia Commons · CC BY 2.0',
           alt: '执笔写字的手' },
-        { id: 'scrim', type: 'shape', shape: 'rect', x: 48, y: 0, w: 6, h: 100, z: 1,
+        { id: 'scrim', type: 'shape', shape: 'rect', x: 48, y: 0, w: 5, h: 100, z: 1,
           bleed: true, static: true, fill: 'bg', opacity: 0.92 },
-        { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '图片 · 与动画结合', x: 7, y: 14, w: 46 },
-        { id: 't', group: 'head', type: 'text', role: 'title', text: '一张静态照片<br>只能看，不能讲', x: 7, y: 22, w: 44, size: 42 },
-        { id: 's', type: 'text', role: 'body', text: '推近、跟随、局部放大 —— 这些让照片开始承担讲解任务。<br>关键是它们必须是<b>时间的函数</b>，而不是 CSS 动画。', x: 7, y: 48, w: 42 },
-        { id: 'm', type: 'metric', value: 0, unit: 's', label: '推近时长（确定性）', tone: 'good', x: 7, y: 62, w: 26, h: 11, decimals: 0 },
-        { id: 'b1', type: 'text', role: 'note', text: '静态图 0 秒 vs 推近 16 秒 ——<br>同一张照片，可讲解时间多了 16 倍。', x: 7, y: 74, w: 42 },
-        { id: 'bd', type: 'text', role: 'note', tone: 'bad', text: '边界：纯色 logo 推近 16 秒就是浪费。', x: 7, y: 84, w: 42 },
+        { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '图片 · 与动画结合', x: 6, y: 12, w: 40 },
+        { id: 't', group: 'head', type: 'text', role: 'title', text: '一张静态照片<br>只能看，不能讲', x: 6, w: 40, size: 40, below: 'k', gap: 1.4 },
+        { id: 's', type: 'text', role: 'body', text: '推近、跟随、局部放大 —— 这些让照片开始承担讲解任务。<br>关键是它们必须是<b>时间的函数</b>，而不是 CSS 动画。', x: 6, w: 40, below: 't', gap: 3 },
+        { id: 'm', type: 'metric', value: 0, unit: 's', label: '推近时长（确定性）', tone: 'good', x: 6, w: 26, decimals: 0, below: 's', gap: 2.6 },
+        { id: 'b1', type: 'text', role: 'note', text: '静态图 0 秒 vs 推近 16 秒 ——<br>同一张照片，可讲解时间多了 16 倍。', x: 6, w: 40, below: 'm', gap: 1.6 },
+        { id: 'bd', type: 'text', role: 'note', tone: 'bad', text: '边界：纯色 logo 推近 16 秒就是浪费。', x: 6, w: 40, below: 'b1', gap: 1.6 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
@@ -63,7 +63,7 @@ export const deck = {
           credit: 'Wikimedia Commons · Public domain',
           alt: '三次贝塞尔曲线' },
         // 画布与图片同位置 —— 图上标注"看这一笔"
-        { id: 'ca', type: 'canvas2d', x: 7, y: 34, w: 56, h: 50, z: 2,
+        { id: 'ca', type: 'canvas2d', x: 7, y: 34, w: 56, h: 50, z: 2, overlapOk: true,   // 故意画在底图上
           data: { p0: [0.08, 0.82], c1: [0.30, 0.10], c2: [0.70, 0.10], p1: [0.92, 0.82], samples: 24 },
           draw: (ctx, t, el, api) => {
             const { ink, w, h, palette: pal } = api;
@@ -98,7 +98,7 @@ export const deck = {
             ink.label(ctx, '这一笔 = 3 个控制点', w * 0.06, h * 0.06, { color: pal.muted, font: '11px ui-monospace, monospace' });
           } },
         { id: 'note', type: 'text', role: 'body', text: '底图是静态的，<br>上面那一笔是画出来的 ——<br>两者共用同一条时间轴。', x: 68, y: 36, w: 26 },
-        { id: 'bd', type: 'text', role: 'note', tone: 'bad', text: '边界：底图有信息密度上限 ——<br>一张图里塞超过 3 个要讲的地方，<br>逐笔反而比静态更慢。', x: 68, y: 62, w: 26 },
+        { id: 'bd', type: 'text', role: 'note', tone: 'bad', text: '边界：底图有信息密度上限 ——<br>一张图里塞超过 3 个要讲的地方，<br>逐笔反而比静态更慢。', x: 68, w: 26, below: 'note', gap: 3 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },

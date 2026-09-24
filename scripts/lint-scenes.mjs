@@ -78,6 +78,8 @@ function lintSafeZone(spec) {
       // bleed: 出血背景（满幅图/色块）—— 它本来就该铺满，安全区管的是**内容**。
       // 要求显式声明，这样"铺满"是作者的决定，而不是漏了 y。
       if (el.bleed === true) continue;
+      // below：y 由引擎按锚点的**实际内容底边**算，静态判定不了 —— 交给 G14 实测。
+      if (el.below != null) continue;
       if (typeof el.y === 'number' && el.y < SAFE.top) {
         errors.push(`scenes[${si}](${sc.id}).${el.id}: y=${el.y}% < ${SAFE.top}% —— 会顶到面包屑带`);
       }

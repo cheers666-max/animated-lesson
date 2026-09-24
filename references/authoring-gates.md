@@ -14,7 +14,8 @@
 | **G0b** theme | `meta.theme` 落到 `#deck-app`，且舞台/控制条/字幕条解析出的 `--bg` 一致 | 半截主题：浅色舞台配深色控制条（覆盖层在 `#stage` 外面） |
 | **G1** boot | 页面能起来、`DECK_INFO` 就绪、`validate()` 无 error、console 无 error | 语法错、CDN 挂、初始化顺序错 |
 | **G2** overflow | 4 个关键帧 × 每幕，所有可见元素的 `getBoundingClientRect` 都在视口内（±3px） | 元素跑出画面（百分比手滑、`h` 太大） |
-| **G2b** clip | 文本/列表/代码/大数字的 `scrollHeight ≤ clientHeight + tol` | **盒子里文字被裁掉** —— 看不到图的作者最容易漏 |
+| **G2b** box-fit | **每个**元素的**内容**都装得进它声明的盒（`scrollHeight ≤ clientHeight + tol`），对**所有**类型生效，不只文字类 | 声明 `h:11%` 而内容 110px、`overflow:visible` → 字画到盒外 30px 压住下一排。**这一条曾经只查 4 个文字类、且只看 `firstElementChild`，所以完全漏掉了 metric 溢出** |
+| **G14** no-overlap | **任意两个元素**的画出来的矩形（文字取 `Range.getClientRects()`，其余取元素盒）在**所有关键帧**都不相交 | 元素互相压住。之前只查"文字层重叠"而且只是 warning，于是画布压底图、metric 压注释这类问题红了也能过。故意叠放的必须显式写 `overlapOk: true`（和 `bleed` 一个哲学：默认不许，声明才许） |
 | **G2c** overlap | 文字层之间重叠面积 > 8×8px 报警 | 两段字压在一起 |
 | **G2d** occlusion | 三类实测：① 字幕条/面包屑/控制条与任何元素**实际墨迹**的相交面积 = 0；② 同一画布内两个 `ink.label` 占位盒不相交；③ 标注不被画布边缘裁掉。探测点必须包含**每条旁白的时刻**（字幕只在旁白窗口可见） | 「看起来有点遮挡」的全部三类。旧版 G2c 只比文字元素的**布局盒**，画布内标注与覆盖层完全没覆盖到 |
 | **G5b** caption-line | 字幕恒为单行（用 Range 数真实行盒） | 字幕换行 → 它占的安全带高度随文案变化 → 作者没法定安全区 |

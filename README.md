@@ -66,7 +66,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 
 ---
 
-## 21 项门禁：凭什么说"讲清楚了"
+## 22 项门禁：凭什么说"讲清楚了"
 
 一半是**技术门禁**（防止坏了），一半是**教学门禁**（防止空转）。
 

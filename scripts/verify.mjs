@@ -275,24 +275,73 @@ if (scenes.length) {
       const r = await ev(`(() => {
         const out = [];
         for (const n of document.querySelectorAll('#stage [data-el]')) {
-          if (!['el-text', 'el-list', 'el-code', 'el-metric'].some((c) => n.classList.contains(c))) continue;
           if (getComputedStyle(n).display === 'none') continue;
+          const isTexty = ['el-text', 'el-list', 'el-code', 'el-metric'].some((c) => n.classList.contains(c));
           const inner = n.firstElementChild ?? n;
           const fs = parseFloat(getComputedStyle(inner).fontSize) || 16;
           // line-height:1 的文字，字形盒天生比行盒高 ~12%，这是正常现象；
           // 真正该报的是"内容被容器裁掉"（列表少一行、段落被切断）。
           const tol = n.classList.contains('el-metric') ? fs * 0.15 : Math.max(3, fs * 0.05);
           const vOver = inner.scrollHeight - inner.clientHeight, hOver = inner.scrollWidth - inner.clientWidth;
-          if (vOver > tol || hOver > tol) out.push({ id: n.dataset.el, vOver, hOver, cls: n.className, tol: Math.round(tol) });
+          if (vOver > tol || hOver > tol) out.push({ id: n.dataset.el, kind: '内部裁切', vOver, hOver, cls: n.className, tol: Math.round(tol) });
+          // ⚠️ 关键补充：**元素自身**的盒也必须有界。
+          // 之前的漏洞：metric 声明 h:11%（79px）而内容 110px，overflow:visible →
+          // 画出来的字跑到盒外 30px，压住下一排，而上面那段只查 firstElementChild 查不出来。
+          if (isTexty && !n.dataset.flow) {
+            const ov = n.scrollHeight - n.clientHeight;
+            if (ov > Math.max(2, tol)) out.push({ id: n.dataset.el, kind: '内容超出声明盒', vOver: ov, hOver: 0, cls: n.className, tol: Math.round(tol) });
+          }
         }
         return out;
       })()`);
-      for (const c of r) clipped.push(`scene${si + 1}@${k}s el=${c.id} 竖向溢出 ${c.vOver}px 横向 ${c.hOver}px（容差 ${c.tol}px）`);
+      for (const c of r) clipped.push(`scene${si + 1}@${k}s ${c.id} [${c.kind}] 竖向 ${c.vOver}px 横向 ${c.hOver}px（容差 ${c.tol}px）`);
     }
   }
-  add('G2b', clipped.length === 0, '盒内文字未被裁切', [...new Set(clipped)].slice(0, 5).join(' | ') || '所有文本/列表/代码块都在自己的盒子里');
-  if (overlaps.length) warn(`文字层重叠 ${overlaps.length} 处`, [...new Set(overlaps)].slice(0, 4).join(' | '));
-  else add('G2', true, '文字层无重叠');
+  add('G2b', clipped.length === 0, '内容装得进自己的盒子', [...new Set(clipped)].slice(0, 4).join(' | ') || '所有元素的内容都在自己声明的盒子里');
+
+  // ---- G14 任意两个元素都不许相交 ----
+  // 之前只查"文字层重叠"而且是 warning —— 于是 metric 压注释、
+  // 画布压底图这类问题一直是红的也能过。改成：全类型、全帧、error。
+  // 故意叠放的（画布盖在底图上）要显式声明 overlapOk: true，和 bleed 一个哲学。
+  const cross = [];
+  for (let si = 0; si < scenes.length; si++) {
+    const dur = scenes[si].duration;
+    for (const k of [0.15, dur * 0.25, dur * 0.4, dur * 0.55, dur * 0.7, dur * 0.85, dur * 0.95].map((v) => +v.toFixed(2))) {
+      await at(si, k);
+      const r = await ev(`(() => {
+        const st = document.querySelector('#stage').getBoundingClientRect();
+        const skip = new Set((window.DECK.spec.scenes[window.DECK.index]?.elements ?? [])
+          .filter((e) => e.bleed === true || e.overlapOk === true).map((e) => e.id));
+        const out = [];
+        const paint = (n) => {
+          const rg = document.createRange(); const rects = [];
+          const w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT); let tn;
+          while ((tn = w.nextNode())) { if (!tn.data.trim()) continue; rg.selectNodeContents(tn); for (const q of rg.getClientRects()) if (q.width > 0.5 && q.height > 0.5) rects.push(q); }
+          if (rects.length) return { x: Math.min(...rects.map(q=>q.left)), y: Math.min(...rects.map(q=>q.top)), r: Math.max(...rects.map(q=>q.right)), b: Math.max(...rects.map(q=>q.bottom)) };
+          const bb = n.getBoundingClientRect();
+          return bb.width > 2 && bb.height > 2 ? { x: bb.left, y: bb.top, r: bb.right, b: bb.bottom } : null;
+        };
+        for (const n of document.querySelectorAll('#stage [data-el]')) {
+          if (skip.has(n.dataset.el)) continue;
+          const cs = getComputedStyle(n);
+          if (cs.display === 'none' || Number(cs.opacity) < 0.05) continue;
+          const box = paint(n); if (!box) continue;
+          out.push({ id: n.dataset.el, ...box });
+        }
+        return out;
+      })()`);
+      for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+        const a = r[i], b = r[j];
+        const ox = Math.min(a.r, b.r) - Math.max(a.x, b.x), oy = Math.min(a.b, b.b) - Math.max(a.y, b.y);
+        if (ox > 3 && oy > 3 && ox * oy > 300) cross.push(`scene${si + 1}@${k}s ${a.id} ∩ ${b.id} (${Math.round(ox)}×${Math.round(oy)}px)`);
+      }
+    }
+  }
+  const uniqCross = [...new Set(cross.map((c) => c.replace(/@[\d.]+s/, '')))];
+  add('G14', cross.length === 0, '任意两个元素都不相交',
+    cross.length === 0 ? '所有帧、所有元素两两不相交（故意叠放的用 overlapOk: true 声明）'
+      : `${uniqCross.length} 组相交：${uniqCross.slice(0, 4).join(' | ')}${uniqCross.length > 4 ? ` …共 ${uniqCross.length} 组` : ''}`);
+  // 文字层重叠已由 G14 统一覆盖（且从 warning 升级为 error），这里不再重复报。
 
   // ---- G2d 遮挡：三类，全部实测 ----
   //   (a) 字幕条 / 面包屑 / 控制条 压到元素的实际墨迹
@@ -342,7 +391,11 @@ if (scenes.length) {
       for (const o of d.overlays) {
         if (o.id === 'deck-caption') { captionLines = Math.max(captionLines, o.lines); captionMaxH = Math.max(captionMaxH, o.h); }
         for (const l of d.labels) { const h = hit(o, l.px); if (h) occ.push(`scene${si + 1}@${k}s ${o.id} 压住画布标注 "${l.text}" ${h[0].toFixed(0)}×${h[1].toFixed(0)}px`); }
-        for (const e of d.dom) { const h = hit(o, e); if (h) occ.push(`scene${si + 1}@${k}s ${o.id} 压住元素 ${e.id} ${h[0].toFixed(0)}×${h[1].toFixed(0)}px`); }
+        for (const e of d.dom) {
+          const h = hit(o, e);
+          // 报坐标，不只报尺寸 —— 不然只能像这样反复猜"到底谁在哪"
+          if (h) occ.push(`scene${si + 1}@${k}s ${o.id}[y${Math.round(o.y)}..${Math.round(o.y + o.h)}] 压住 ${e.id}[y${Math.round(e.y)}..${Math.round(e.b)}] ${h[0].toFixed(0)}×${h[1].toFixed(0)}px`);
+        }
       }
       for (let i = 0; i < d.labels.length; i++) {
         const a = d.labels[i];
@@ -410,7 +463,7 @@ if (scenes.length) {
     }
   }
   if (ok.length) {
-    add('G11', false, '画面必须对数据敏感（扰动测试）', `${ok.join(', ')} 声明了 data，但把它乘 1.6 之后画面完全没变 —— 画的是装饰，不是数据`);
+    add('G11', false, '画面必须对数据敏感（扰动测试）', `${ok.join(', ')} 声明了 data，但数值 ×1.6 和删掉最后一个元素，画面都没变 —— 画的是装饰，不是数据（常见原因：只有 1 根柱子，归一化后永远满格；或画法把坐标写死了）`);
   } else {
     add('G11', true, '画面必须对数据敏感（扰动测试）',
       withData.length ? `${withData.join(', ')} —— 扰动数据后画面均发生变化，证明画面真的在编码数据`

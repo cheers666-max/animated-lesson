@@ -165,13 +165,20 @@ function buildScene(sec, si, srcRel) {
   const claim = (sec.paras[0]?.text ?? sec.bullets[0]?.text ?? sec.title).slice(0, 60);
 
   // 头：kicker + title（title 用原文小节标题，不改写）
-  elements.push({ id: 'k', group: 'head', type: 'text', role: 'kicker', text: `§${si + 1} · 来源 ${srcRel}:${sec.line}`, x: 6, y: 5, w: 70 });
-  elements.push({ id: 't', group: 'head', type: 'text', role: 'title', text: sec.title.slice(0, 34), x: 6, y: 10, w: 74, size: 34 });
+  // 排版方式：**整列用 below 链**，不再手填 y。
+  // 手填 y 的老写法必然出事 —— 声明 h:11% 而内容 110px，字就压到下一排去了
+  // （G2b/G14 就是为此存在的）。below 让引擎量完高度再排，作者只声明顺序和间距。
+  let lastId = 'k';
+  let lastRight = null;
+  const push = (el) => { elements.push(el); lastId = el.id; return el; };
+
+  push({ id: 'k', group: 'head', type: 'text', role: 'kicker', text: `§${si + 1} · 来源 ${srcRel}:${sec.line}`, x: 6, y: 5, w: 70 });
+  push({ id: 't', group: 'head', type: 'text', role: 'title', text: sec.title.slice(0, 34), x: 6, w: 84, size: 34, below: 'k', gap: 1.6 });
   beats.push({ at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 });
 
   // 主张：首段原文
   if (sec.paras[0]) {
-    elements.push({ id: 'claim', group: 'claim', type: 'text', role: 'body', text: sec.paras[0].text.slice(0, 150), x: 6, y: 20, w: 88, size: 17 });
+    push({ id: 'claim', group: 'claim', type: 'text', role: 'body', text: sec.paras[0].text.slice(0, 150), x: 6, w: 60, size: 17, below: 't', gap: 3 });
     beats.push({ at: 0.9, action: 'reveal', target: 'claim', dur: 0.5 });
     speaks.push({ at: 1.2, action: 'speak', text: sec.paras[0].text.slice(0, 42) });   // TODO 改写成本人口吻
   }
@@ -180,54 +187,62 @@ function buildScene(sec, si, srcRel) {
   const bullets = sec.bullets.slice(0, 5);
   let clock = 4.5;
   if (bullets.length) {
-    elements.push({ id: 'l', group: 'mech', type: 'list', x: 6, y: 34, w: 88, items: bullets.map((b, i) => ({ badge: String(i + 1), text: b.text.slice(0, 90) })) });
+    push({ id: 'l', group: 'mech', type: 'list', x: 6, w: 60, items: bullets.map((b, i) => ({ badge: String(i + 1), text: b.text.slice(0, 90) })), below: lastId, gap: 2.4 });
     beats.push({ at: 4.2, action: 'reveal', target: 'l', dur: 0.7 });
     clock = 6.0;
   }
 
-  // 代码：原样搬运
+  // 代码：原样搬运。h 给足 —— code 是唯一必须显式给高的类型（滚动容器）
   if (sec.codes.length) {
     const c = sec.codes[0];
-    elements.push({ id: 'code', group: 'code', type: 'code', lang: c.lang, text: c.code.split('\n').slice(0, 10).join('\n'), x: 6, y: bullets.length ? 62 : 40, w: 52, h: bullets.length ? 26 : 44 });
+    const lines = c.code.split('\n').slice(0, 10).length;
+    push({ id: 'code', group: 'code', type: 'code', lang: c.lang, code: c.code.split('\n').slice(0, 10).join('\n'), x: 6, w: 60, h: Math.min(30, 4 + lines * 2.6), below: lastId, gap: 2.4 });
     beats.push({ at: clock, action: 'reveal', target: 'code', dur: 0.6 });
     clock += 1.2;
   }
 
-  // 量级：自动抽出的数字（这是"内容不简单"的关键一环）
-  if (nums.length) {
-    const top = nums.slice(0, 6);
-    const el = { id: 'num', group: 'num', type: 'text', role: 'quote', text: `量级（原文抽出）：${top.map((n) => n.raw).join(' · ')}`, x: 6, y: 62, w: 88, size: 16 };
-    if (bullets.length && sec.codes.length) { el.y = 62; el.x = 62; el.w = 32; }
-    elements.push(el);
-    beats.push({ at: clock, action: 'reveal', target: 'num', dur: 0.6 });
-    clock += 1.2;
+  // 数据画面：通用柱状图，走右栏。**已经 data-driven**，所以开箱就能过 G11。
+  // ⚠️ 只有 1 个数字时不要画柱状图 —— 单柱归一化后永远满格，对数值天然不敏感，
+  // G11 会（正确地）判它"是装饰不是数据"。一个数就用 metric 直接显示。
+  if (nums.length === 1) {
+    const n0 = nums[0];
+    elements.push({ id: 'm', group: 'num', type: 'metric', value: Math.abs(n0.v) || 0, label: n0.raw, x: 68, y: 24, w: 26, decimals: 2, tone: 'accent' });
+    lastRight = 'm';
+    beats.push({ at: clock, action: 'countUp', target: 'm', dur: 1.6 });
+    clock += 2.4;
   }
-
-  // 数据画面：通用柱状图。**已经 data-driven**，所以开箱就能过 G11。
-  // 作者的第一件事应该是把它换成真正解释这件事的画法（见 references/content-depth.md）。
-  if (nums.length) {
+  if (nums.length >= 2) {
     const bars = nums.slice(0, 6).map((n, i) => ({ k: n.raw, v: Math.abs(n.v) || 1, tone: i % 3 === 0 ? 'accent' : i % 3 === 1 ? 'accent-2' : 'good' }));
-    const y = sec.codes.length ? 40 : 34;
-    elements.push({ id: 'c', group: 'canvas', type: 'canvas2d', x: 62, y: 20, w: 32, h: 40, monotonic: true, draw: 'drawAutoBars', data: { bars, unit: '' } });
+    elements.push({ id: 'c', group: 'canvas', type: 'canvas2d', x: 68, y: 22, w: 26, h: 34, monotonic: true, draw: 'drawAutoBars', data: { bars, unit: '' } });
+    lastRight = 'c';
     beats.push({ at: clock, action: 'reveal', target: 'c', dur: 0.4 });
     beats.push({ at: clock + 0.1, action: 'draw', target: 'c', dur: 4 });
     clock += 4.6;
   }
 
+  // 量级：自动抽出的数字（这是"内容不简单"的关键一环）。跟在柱状图下面
+  if (nums.length >= 2 && lastRight) {
+    const top = nums.slice(0, 6);
+    elements.push({ id: 'num', group: 'num', type: 'text', role: 'quote', text: `量级（原文抽出）：${top.map((n) => n.raw).join(' · ')}`, x: 68, w: 26, size: 15, below: 'c', gap: 2 });
+    lastRight = 'num';
+    beats.push({ at: clock, action: 'reveal', target: 'num', dur: 0.6 });
+    clock += 1.2;
+  }
+
   // 边界：原文里那几句"但是/除非/只在"—— 逐字搬运，不自己编
   if (boundaryText) {
-    elements.push({ id: 'b', group: 'boundary', type: 'text', role: 'body', text: `边界：${boundaryText.slice(0, 120)}`, x: 6, y: 86, w: 88, size: 14 });
+    push({ id: 'b', group: 'boundary', type: 'text', role: 'body', text: `边界：${boundaryText.slice(0, 120)}`, x: 6, w: 60, size: 14, below: lastId, gap: 2.6 });
     beats.push({ at: clock, action: 'reveal', target: 'b', dur: 0.5 });
     clock += 1.4;
   }
 
   // 时长：按旁白字数预算（4.6 字/秒）+ 收尾，夹在 [14, 40]
-  const speakChars = speaks.reduce((a, s) => a + s.text.length, 0);
-  const duration = Math.max(14, Math.min(40, Math.round(clock + speakChars / 4.6 + 2)));
+  const speakChars2 = speaks.reduce((a, sp) => a + sp.text.length, 0);
+  const duration = Math.max(14, Math.min(40, Math.round(clock + speakChars2 / 4.6 + 2)));
 
   // 引用块 → 收尾金句
   if (sec.quotes.length) {
-    elements.push({ id: 'q', group: 'concl', type: 'text', role: 'quote', text: sec.quotes[0].text.slice(0, 110), x: 6, y: 78, w: 88, size: 17 });
+    elements.push({ id: 'q', group: 'concl', type: 'text', role: 'quote', text: sec.quotes[0].text.slice(0, 110), x: 6, w: 60, size: 17, below: lastId, gap: 3 });
     beats.push({ at: Math.max(clock, duration - 5), action: 'reveal', target: 'q', dur: 0.6 });
   }
 

@@ -29,7 +29,7 @@ export const deck = {
         { id: 't', group: 'head', type: 'text', role: 'title', text: '方波不是"方"的 —— 它是一堆正弦叠出来的', x: 5, y: 11, w: 66, size: 30 },
 
         // 谐波逐项叠加：淡色是每一项，亮色是它们的和，虚线是理想的方波
-        { id: 'ca', type: 'canvas2d', x: 5, y: 26, w: 66, h: 46, z: 1,
+        { id: 'ca', type: 'canvas2d', x: 5, y: 25, w: 66, h: 40, z: 1,
           data: { harmonics: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21], grow: [1.5, 17], samples: 420 },
           draw: (ctx, t, el, api) => {
             const { w, h, palette: pal, data: d, ink } = api;
@@ -83,10 +83,10 @@ export const deck = {
             ink.label(ctx, '每一条淡线 = 一个正弦项（振幅 = 4/πk）', X(0.52), mid - A - 12, { color: pal.good, font: '11px ui-monospace, monospace' });
           } },
 
-        { id: 'm1', group: 'row', type: 'metric', value: 0, unit: '%', label: '1 项 · RMS 误差', tone: 'bad', x: 5, y: 74, w: 19, h: 11, decimals: 2 },
-        { id: 'm2', group: 'row', type: 'metric', value: 0, unit: '%', label: '9 项 · RMS 误差', x: 26, y: 74, w: 19, h: 11, decimals: 2 },
-        { id: 'm3', group: 'row', type: 'metric', value: 0, unit: '%', label: '99 项 · RMS 误差', tone: 'good', x: 47, y: 74, w: 19, h: 11, decimals: 2 },
-        { id: 'bt', type: 'text', role: 'note', text: '项数 ×99，误差 ÷25 ——<br>这就是"用正弦拼出任意形状"的代价。', x: 5, y: 87, w: 66 },
+        { id: 'm1', group: 'row', type: 'metric', value: 0, unit: '%', label: '1 项 · RMS 误差', tone: 'bad', x: 5, y: 67, w: 19, decimals: 2 },
+        { id: 'm2', group: 'row', type: 'metric', value: 0, unit: '%', label: '9 项 · RMS 误差', x: 26, y: 67, w: 19, decimals: 2 },
+        { id: 'm3', group: 'row', type: 'metric', value: 0, unit: '%', label: '99 项 · RMS 误差', tone: 'good', x: 47, y: 67, w: 19, decimals: 2 },
+        { id: 'bt', type: 'text', role: 'note', text: '项数 ×99，误差 ÷25 ——<br>这就是"用正弦拼出任意形状"的代价。', x: 5, w: 66, below: 'm1', gap: 1.6 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },

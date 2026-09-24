@@ -110,7 +110,9 @@ export function validate(spec) {
       else if (ids.has(el.id)) E(`${e}: id 重复`);
       else ids.add(el.id);
       if (!KNOWN_TYPES.includes(el.type)) E(`${e}: 未知 type "${el.type}"`);
-      if (typeof el.x !== 'number' || typeof el.y !== 'number') E(`${e}: 需要数字 x/y（百分比）`);
+      // y 可以省略 —— 用 below 挂在别的元素下面时，位置由引擎按锚点的实际内容底边算
+      if (typeof el.x !== 'number') E(`${e}: 需要数字 x（百分比）`);
+      if (typeof el.y !== 'number' && el.below == null) E(`${e}: 需要数字 y（百分比），或者用 below:'锚点id' 让引擎算`);
       if (typeof el.w !== 'number') E(`${e}: 需要数字 w（百分比）`);
       if (el.x < 0 || el.y < 0 || el.x + el.w > 100 + 1e-6) E(`${e}: 越界 x=${el.x} w=${el.w}（x+w 必须 ≤ 100）`);
       if (el.y > 100) E(`${e}: y=${el.y} 超出画面`);
@@ -122,6 +124,15 @@ export function validate(spec) {
       if (el.type === 'canvas2d' && typeof el.draw !== 'function') E(`${e}: canvas2d 需要 draw(ctx, t, el, api) 函数`);
       if (el.type === 'three' && typeof el.init !== 'function') E(`${e}: three 需要 init(THREE, el, api) -> update(t, el, api)`);
       if (el.type === 'metric' && typeof el.value !== 'number') W(`${e}: metric 建议给初始 value（否则从 0 开始）`);
+      if (el.overlapOk === true && el.bleed !== true) {
+        W(`${e}: 声明了 overlapOk —— 它会被 G14 跳过。确认这是**故意叠放**（如画布盖在底图上），不是真重叠`);
+      }
+      if (el.below != null) {
+        if (!ids.has(el.below)) {
+          E(`${e}: below="${el.below}" 指向的 id 不在本幕（或声明在本元素之后）—— below 只能引用**先声明**的同幕元素`);
+        }
+        if (el.y != null) W(`${e}: 同时给了 y 和 below —— y 会被忽略。留 y 当"没锚点时的退化位置"就写注释说明，否则删掉`);
+      }
       if (el.bleed && ['text', 'list', 'code', 'metric'].includes(el.type)) {
         E(`${e}: bleed 只用于背景（image/shape）—— 内容元素出血会被字幕条压住`);
       }
@@ -808,7 +819,7 @@ export function createDeck(spec, opts = {}) {
       const node = document.createElement('div');
       node.dataset.el = el.id;
       node.style.left = `${el.x}%`;
-      node.style.top = `${el.y}%`;
+      node.style.top = `${el.y ?? 0}%`;   // below 元素稍后会重定位；先给合法值，绝不留 undefined%
       node.style.width = `${el.w}%`;
       if (el.h != null) node.style.height = `${el.h}%`;
       if (el.z != null) node.style.zIndex = String(el.z);
@@ -817,6 +828,50 @@ export function createDeck(spec, opts = {}) {
       RENDERERS[el.type]?.(el, node, { t: 0, opacity: 1, value: el.value ?? 0, p: 0, grow: 1, text: el.text }, api);
       compiled.nodes.set(el.id, node);
     }
+
+    /**
+     * `below` —— 垂直流式定位，让"压在下一排上"在构造上不可能发生。
+     *
+     * 为什么需要它：元素声明的是**盒子**，但画出来的**内容**可能更高
+     * （metric 的 `h:11` 是 79px，实际内容 110px，overflow:visible 就往上压）。
+     * 手工填 y 就是在赌内容高度 —— 这个赌赢不了。
+     *
+     * 用法：{ id:'bt', type:'text', below:'m1', gap:1.5, x:5, w:66 }  （不给 y）
+     * 位置 = 锚点**实际内容的底边** + gap。锚点必须先声明（同幕、靠前）。
+     *
+     * stage 此时已经 append 完，量到的是**布局后**的真实高度（自动高度也准）。
+     */
+    // 每个元素自身的**渲染高度**（相对它自己的 top）—— 与它被放在哪里无关。
+    // 这一步只量"多高"，不量"在哪"，所以链路累加的结果不依赖测量时的 DOM 状态。
+    const ownH = (id) => {
+      const n = compiled.nodes.get(id); if (!n) return 0;
+      const nb = n.getBoundingClientRect(); if (nb.height < 0.5) return 0;
+      let h = nb.height;
+      // 子元素可能超出自身盒（metric 的大数字 + 标签），取最大相对底边兜底
+      for (const c of n.querySelectorAll('*')) {
+        const r = c.getBoundingClientRect();
+        if (r.width > 0.5 && r.height > 0.5) h = Math.max(h, r.bottom - nb.top);
+      }
+      return h;
+    };
+    const stageH = stage.getBoundingClientRect().height || 1;
+    const topById = new Map();
+    for (const el of sc.elements ?? []) {
+      if (el.y != null) topById.set(el.id, (el.y / 100) * stageH);
+    }
+    for (const el of sc.elements ?? []) {
+      if (el.below == null) continue;
+      const anchorTop = topById.get(el.below);
+      if (anchorTop == null) continue;               // 锚点没有 y 也没有 below → 校验器已报错
+      topById.set(el.id, anchorTop + ownH(el.below) + ((el.gap ?? 1.2) / 100) * stageH);
+    }
+    for (const el of sc.elements ?? []) {
+      if (el.below == null) continue;
+      const t = topById.get(el.id);
+      // 最后夹一道：不许推到安全区外（推出去就是遮挡，宁可挤一点也不出界）
+      if (t != null) compiled.nodes.get(el.id).style.top = `${Math.min(t, stageH * 0.92)}px`;
+    }
+
     deck.compiled = compiled;
     deck.index = i;      // scene 是由 index 派生的 getter，不要赋值
   }

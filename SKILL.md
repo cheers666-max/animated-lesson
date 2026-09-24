@@ -55,7 +55,7 @@ draw(ctx, t, el, api)   // t = 场景内秒数。它是输入，不是时钟。
 | B2 | **写元素**：只用百分比定位，两栏用 `4/44` + `52/44`；内容按 主张/机制/量级/边界 组织 | `references/scene-dsl.md` · `references/skill-roadmap.md` | `validate()` 无越界错误 |
 | B3 | **写动作**：每个元素至少要有一个动作（否则是死元素） | 动作目录 | 无"死元素"警告 |
 | B4 | **做动画载体**：canvas2d 画过程，three 画空间，metric 画数字 | `draw(ctx,t,...)` / `init(THREE,...)` | 静态 lint 全绿 |
-| B5 | **上浏览器验**：`node scripts/verify.mjs` | 21 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感） |
+| B5 | **上浏览器验**：`node scripts/verify.mjs` | 22 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感） |
 | B6 | **写 3D 的降级路径**：`fallback.boxes` 与 3D 共用同一条时间表 | `submissionAt(t)` 模式 | G8 通过（`?three=off` 仍在动） |
 | B7 | **加旁白与预测题** | `speak` / `quiz` | G5、G6 通过 |
 | B8 | **出片** | `--mp4=out/x.mp4 --size=1920x1080` | 得到 1080p mp4（帧不落盘） |
@@ -78,7 +78,7 @@ node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 # 1. 静态校验（毫秒级，作者循环里一直跑）—— 顺带输出内容深度体检表
 node scripts/lint-scenes.mjs
 
-# 2. 浏览器门禁（19 项，含确定性双渲染 diff、遮挡、数据敏感性、静态页冒充检测）
+# 2. 浏览器门禁（22 项，含确定性双渲染 diff、遮挡、两两不相交、数据敏感性）
 node scripts/verify.mjs
 node scripts/verify.mjs --shots=/tmp/shots              # 顺便导出关键帧
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js'
@@ -114,7 +114,7 @@ templates/
   deck.html              可跑课件壳
 scripts/
   lint-scenes.mjs    静态校验（复用 validate + 源码扫非确定性）
-  verify.mjs         浏览器 12 项门禁 + 关键帧/帧序列导出
+  verify.mjs         浏览器 22 项门禁 + 关键帧/帧序列导出
 references/
   scene-dsl.md       DSL 完整参考（元素、动作、API、ink 工具箱）
   stroke-drawing.md  「按笔画出来」模式参考：5 个 case + 设计规则 + 度量演进
