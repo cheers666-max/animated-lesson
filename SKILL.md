@@ -115,6 +115,7 @@ templates/
 scripts/
   lint-scenes.mjs    静态校验（复用 validate + 源码扫非确定性）
   verify.mjs         浏览器 22 项门禁 + 关键帧/帧序列导出
+  gate-selftest.mjs  负向测试：造坏课件，证明门禁真的会失败
 references/
   scene-dsl.md       DSL 完整参考（元素、动作、API、ink 工具箱）
   stroke-drawing.md  「按笔画出来」模式参考：5 个 case + 设计规则 + 度量演进

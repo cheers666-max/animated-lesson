@@ -18,6 +18,11 @@ if [ "${1:-}" != "--fast" ]; then
     esac
     run node scripts/verify.mjs --deck="$DECK"
   done
+
+  # 负向测试：证明门禁真的会失败。
+  # 正向测试全绿只能说明"没坏"；如果哪天重构把某条门禁的判据写空了，
+  # 7 份课件**依然会全绿** —— 只有这一步会红。
+  run node scripts/gate-selftest.mjs
 fi
 
 echo

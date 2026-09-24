@@ -33,6 +33,11 @@ jobs:
       - name: 本地链接可达性
         run: node scripts/check-links.mjs
 
+      # CI 里只跑不需要浏览器的负向用例。它的价值是：如果哪天有人把
+      # 不确定性扫描写空了，正向 lint 依然全绿，只有这一步会红。
+      - name: 负向测试（门禁真的会失败吗）
+        run: node scripts/gate-selftest.mjs --case=nondeterminism
+
       - name: 全部脚本语法可解析
         run: |
           for f in $(find . -name '*.mjs' -not -path './node_modules/*'); do

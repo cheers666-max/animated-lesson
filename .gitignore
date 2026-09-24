@@ -8,5 +8,8 @@ shots/
 out/frames/
 out/shots/
 
+# 负向测试的临时夹具（gate-selftest.mjs 自己写、自己删）
+templates/.selftest-*.js
+
 .DS_Store
 *.log

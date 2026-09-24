@@ -57,7 +57,8 @@ node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 
 node scripts/lint-scenes.mjs      # 静态校验 + 内容深度体检（毫秒级）
 node scripts/verify.mjs           # 19 项浏览器断言 + 出片链路
-./scripts/check-all.sh            # 交付前一键：lint + 链接 + 7 份课件全量门禁
+./scripts/check-all.sh            # 交付前一键：lint + 链接 + 7 份课件全量门禁 + 负向测试
+node scripts/gate-selftest.mjs    # 负向测试：证明门禁真的会失败（造坏课件 → 要求报红）
 
 # 一键出片：帧直接管道进 ffmpeg，不落盘
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
@@ -93,7 +94,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | **G13** | `image` 必须真的解码成功且带 `credit` | 缺图开天窗、图片没标出处 |
 | **G12** | 出片后量字幕带亮度：旁白时刻必须明显亮于无旁白时刻 | 「声称字幕已烘焙、其实成片里没有」 |
 
-**G0 / G2d / G11 / G12 都是被真实事故逼出来的**，不是先想出来的门禁：
+**G0 / G2d / G11 / G12 / G14 都是被真实事故逼出来的**，不是先想出来的门禁：
 三个 CSS id 写错导致舞台被裁 17px；画布内标注互相压；元课件 7 块画布全是硬编码坐标；
 以及我自己声称过"字幕已烘焙"而实际没有。
 
