@@ -84,32 +84,42 @@ export const deck = {
     title: '为什么 instancing 快 3.4 倍',
     subtitle: '同一份几何数据，只改提交方式',
     theme: 'ink',
-  },
+    oneLine: '实例化把两万次 draw call 变成一次，代价是每帧仍然要画完两万个方块。',},
   scenes: [
     // ---------------------------------------------------------------- 01 钩子
     {
       id: 'hook',
       title: '同一份数据，差 3.4 倍',
       duration: 13,
+
+      beat: 'hook',
+
       elements: [
-        { id: 'kicker', group: 'head', type: 'text', role: 'kicker', text: 'WEBGPU · CPU 侧优化', x: 8, y: 12, w: 60 },
+        { id: 'kicker', group: 'head', type: 'text', role: 'kicker', text: 'WEBGPU · 两万个物体', x: 8, y: 12, w: 60 },
         { id: 'title', group: 'head', type: 'text', role: 'title', text: '两万个物体，<br>只改「怎么提交」', x: 8, y: 20, w: 60, size: 46 },
         { id: 'n-obj', type: 'metric', value: 0, suffix: '', label: '场景里的物体数', x: 8, y: 54, w: 24, decimals: 0 },
         { id: 'n-speed', type: 'metric', value: 0, unit: '×', label: 'CPU 帧时间差', tone: 'good', x: 40, y: 54, w: 24, decimals: 1 },
-        { id: 'todo', type: 'text', role: 'body', text: '同样的顶点、同样的材质、同样的 GPU。<br>变的只有 CPU 每帧发出的命令。', x: 8, y: 80, w: 56 },
+        { id: 'todo', type: 'text', role: 'body', text: '同样的顶点、同样的材质、同样的 GPU。<br>变的只有一件事 —— 先猜猜是哪一件。', x: 8, y: 80, w: 56 },
         { id: 'mark', type: 'annot', kind: 'underline', text: '只改这一层', x: 7.2, y: 27.5, w: 12, h: 10 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: 'kicker', dur: 0.4 },
         { at: 0.7, action: 'reveal', target: 'title', dur: 0.6 },
+        { at: 1.2, action: 'spotlight', target: 'n-obj', dur: 0.5 },   // G16 焦点：两万个物体。同一份几何数据，只改提交方式，C…
         { at: 1.4, action: 'draw', target: 'mark', dur: 0.7 },
         { at: 1.6, action: 'countUp', target: 'n-obj', from: 0, to: 20000, dur: 1.6 },
-        { at: 3.2, action: 'countUp', target: 'n-speed', from: 0, to: 3.4, dur: 1.0 },
-        { at: 4.4, action: 'reveal', target: 'todo', dur: 0.6 },
-        { at: 1.4, action: 'speak', text: '两万个物体。同一份几何数据，只改提交方式，CPU 帧时间差了三点四倍。' },
-        { at: 5.4, action: 'speak', text: '顶点、材质、GPU 都没变。变的只有 CPU 每帧发出的命令。' },
+        { at: 3.0, action: 'reveal', target: 'todo', dur: 0.6 },
+        // 提问**之前**只交代设定，不给答案（G19 会查）。
+        { at: 1.4, action: 'speak', text: '两万个物体，同样的顶点、同样的材质、同样的 GPU。只改一件事：怎么提交。' },
+        { at: 3.6, action: 'spotlight', target: 'todo', dur: 0.5 },
+        // ↓ 答案在题之后：先问后讲，预测才有意义。
+        { at: 6.4, action: 'countUp', target: 'n-speed', from: 0, to: 3.4, dur: 1.0 },
+        { at: 6.4, action: 'spotlight', target: 'n-speed', dur: 0.5 },
+        { at: 6.4, action: 'dim', target: 'n-obj', dur: 0.5 },
+        { at: 6.8, action: 'speak', text: '瓶颈在 CPU：两万次命令提交，帧时间差了三点四倍。' },
       ],
       quiz: {
+        at: 5.6,
         q: '先猜一下：两万个物体，瓶颈最可能在哪儿？',
         opts: [
           { t: 'GPU 顶点处理不过来', ok: false, why: '两万 × 36 顶点 = 72 万顶点，现代 GPU 毫秒级就画完了。实测 GPU 只用了 1.85ms。' },
@@ -124,6 +134,9 @@ export const deck = {
       id: 'mechanism',
       title: '逐次提交 vs 一次提交',
       duration: 20,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'h-l', group: 'L', type: 'text', role: 'title', text: '逐对象提交', x: 4, y: 4, w: 44, size: 26 },
         { id: 'h-l-sub', group: 'L', type: 'text', role: 'body', text: 'N 次 writeBuffer + N 次 drawIndexed', x: 4, y: 10, w: 44, size: 15 },
@@ -166,6 +179,9 @@ export const deck = {
       id: 'three',
       title: '在 3D 里看同一件事',
       duration: 25,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'h', group: 'head', type: 'text', role: 'title', text: 'GPU 一直在画，忙的是 CPU', x: 4, y: 4, w: 60, size: 26 },
         { id: 'stage3d', type: 'three', x: 22, y: 12, w: 56, h: 62,
@@ -233,9 +249,12 @@ export const deck = {
       beats: [
         { at: 0.3, action: 'reveal', target: 'h', dur: 0.5 },
         { at: 0.6, action: 'reveal', target: 'stage3d', dur: 0.8 },
+        { at: 0.6, action: 'spotlight', target: 'phase', dur: 0.5 },   // G16 焦点：先看逐个提交。每提交一次，就点亮一个方块，计…
         { at: 1.0, action: 'reveal', target: ['cnt', 'phase', 'legend'], dur: 0.5 },
         { at: 1.4, action: 'countUp', target: 'cnt', from: 0, to: 64, dur: 6.0 },
         { at: 1.2, action: 'morph', target: 'phase', fromText: '阶段：逐个提交', charProgress: true, dur: 1.0 },
+        { at: 10.8, action: 'dim', target: 'phase', dur: 0.5 },
+        { at: 10.8, action: 'spotlight', target: 'cnt', dur: 0.5 },   // G16 焦点：再看实例化：整批一次提交，GPU 仍然要画所…
         { at: 11.4, action: 'morph', target: 'phase', fromText: '阶段：一次提交', charProgress: true, dur: 0.6 },
         { at: 11.4, action: 'countUp', target: 'cnt', from: 64, to: 1, dur: 0.3 },
         { at: 12.2, action: 'reveal', target: 'cap', dur: 0.5 },
@@ -243,6 +262,8 @@ export const deck = {
         { at: 18.4, action: 'zoomTo', target: null, scale: 1.0, dur: 1.4 },
         { at: 0.8, action: 'speak', text: '先看逐个提交。每提交一次，就点亮一个方块，计数器一路涨上去。' },
         { at: 11.0, action: 'speak', text: '再看实例化：整批一次提交，GPU 仍然要画所有这些方块，但 CPU 只调用一次。' },
+        { at: 18.6, action: 'dim', target: 'cnt', dur: 0.5 },
+        { at: 18.6, action: 'spotlight', target: 'cap', dur: 0.5 },   // G16 焦点：GPU 从头到尾都在正常干活。忙的一直是 C…
         { at: 18.8, action: 'speak', text: 'GPU 从头到尾都在正常干活。忙的一直是 CPU。' },
       ],
     },
@@ -252,6 +273,9 @@ export const deck = {
       id: 'numbers',
       title: '不是线性收益，有拐点',
       duration: 18,
+
+      beat: 'evidence',
+
       elements: [
         { id: 'h', group: 'head', type: 'text', role: 'title', text: '规模越大，差得越多', x: 6, y: 5, w: 60, size: 30 },
         { id: 'sub', group: 'head', type: 'text', role: 'body', text: '同一台机器实测 CPU 帧时间加速比', x: 6, y: 12, w: 60, size: 16 },
@@ -274,6 +298,7 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['h', 'sub'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'chart', dur: 0.5 },   // G16 焦点：四个规模，四组实测。五百个物体只快两倍出头，…
         { at: 0.8, action: 'reveal', target: 'chart', dur: 0.5 },
         { at: 1.0, action: 'grow', target: 'chart', from: 0, to: 1, dur: 1.8, ease: 'out' },
         { at: 3.0, action: 'stagger', target: ['l1'], step: 0, dur: 0.6 },
@@ -282,6 +307,8 @@ export const deck = {
         { at: 6.0, action: 'reveal', target: 'concl', dur: 0.6 },
         { at: 7.4, action: 'reveal', target: 'src', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '四个规模，四组实测。五百个物体只快两倍出头，省下的绝对值小到可以忽略。' },
+        { at: 7.6, action: 'dim', target: 'chart', dur: 0.5 },
+        { at: 7.6, action: 'spotlight', target: 'src', dur: 0.5 },   // G16 焦点：两千到两万，加速比稳定在三倍以上。省下的是固…
         { at: 7.8, action: 'speak', text: '两千到两万，加速比稳定在三倍以上。省下的是固定开销乘次数。' },
         { at: 12.0, action: 'speak', text: '次数少的时候，这笔钱不值得你为此重构代码。' },
       ],
@@ -292,6 +319,9 @@ export const deck = {
       id: 'boundary',
       title: '别搞错优化对象',
       duration: 16,
+
+      beat: 'boundary',
+
       elements: [
         { id: 'h', group: 'head', type: 'text', role: 'title', text: 'GPU 时间一点没变', x: 6, y: 6, w: 60, size: 30 },
         { id: 'm1', group: 'gpu', type: 'metric', value: 0.19, unit: 'ms', label: '逐对象提交 · GPU', x: 6, y: 20, w: 26, decimals: 2 },
@@ -306,6 +336,7 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: 'h', dur: 0.5 },
+        { at: 0.3, action: 'spotlight', target: 'm1', dur: 0.5 },   // G16 焦点：注意：GPU 时间从零点一九到一点八五毫秒，…
         { at: 0.7, action: 'reveal', target: ['m1'], dur: 0.5 },
         { at: 0.9, action: 'countUp', target: 'm1', from: 0, to: 0.19, dur: 0.8 },
         { at: 1.6, action: 'reveal', target: ['m2'], dur: 0.5 },
@@ -314,6 +345,8 @@ export const deck = {
         { at: 4.0, action: 'reveal', target: 'l', dur: 0.8 },
         { at: 6.0, action: 'reveal', target: 'quizhint', dur: 0.4 },
         { at: 0.5, action: 'speak', text: '注意：GPU 时间从零点一九到一点八五毫秒，两边随规模同步增长。' },
+        { at: 6.4, action: 'dim', target: 'm1', dur: 0.5 },
+        { at: 6.4, action: 'spotlight', target: 'quizhint', dur: 0.5 },   // G16 焦点：所以这是一次纯 CPU 侧的优化。判断方向看…
         { at: 6.6, action: 'speak', text: '所以这是一次纯 CPU 侧的优化。判断方向看谁更接近帧预算。' },
         { at: 11.0, action: 'speak', text: '总绘制数少于两千的时候，别为它重构。' },
       ],

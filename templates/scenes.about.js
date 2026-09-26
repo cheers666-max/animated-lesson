@@ -265,13 +265,17 @@ function drawParallel(ctx, t, el, api) {
 
 // ================================================================= 课件
 export const deck = {
-  meta: { title: '按笔画讲清楚', subtitle: '一个把「过程」做成讲解的模式', theme: 'ink' },
+  meta: { title: '按笔画讲清楚', subtitle: '一个把「过程」做成讲解的模式', theme: 'ink',
+    oneLine: '动画讲解课把"讲清楚"变成了可执行的门禁 —— 它不检查你讲得好不好，它检查你的画面有没有在承载信息。',},
   scenes: [
     // ---------------------------------------------------------- 01 背景
     {
       id: 'bg',
       title: '为什么是现在',
       duration: 30,
+
+      beat: 'hook',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '背景 · 为什么是现在', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '三件事同时成立，用了两年', x: 6, y: 10, w: 70, size: 36 },
@@ -298,15 +302,25 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：先看时间。Chrome 在 2023 年 5…
         { at: 0.9, action: 'reveal', target: 'c', dur: 0.5 },
-        { at: 1.0, action: 'draw', target: 'c', dur: 10 },
-        { at: 12.0, action: 'reveal', target: 'l', dur: 0.7 },
+        // 时间轴分三段画，段间停住 —— 旁白在报具体年月，画面必须停得下来让人对上
+        { at: 1.0, action: 'draw', target: 'c', from: 0, to: 0.35, dur: 4 },
+        { at: 5.2, action: 'hold', dur: 1.5 },
+        { at: 6.8, action: 'draw', target: 'c', from: 0.35, to: 0.7, dur: 4 },
+        { at: 11.0, action: 'hold', dur: 1.5 },
+        { at: 12.9, action: 'draw', target: 'c', from: 0.7, to: 1, dur: 3 },
+        { at: 16.2, action: 'reveal', target: 'l', dur: 0.7 },
         { at: 17.0, action: 'reveal', target: 'q', dur: 0.6 },
+        { at: 17.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 17.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：三件事第一次同时成立，门槛就从会做动画，降到…
         { at: 20.5, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '先看时间。Chrome 在 2023 年 5 月就发了 WebGPU 的正式版。' },
         { at: 5.6, action: 'speak', text: 'Safari 要等到 2025 年 9 月的 26.0 —— 中间差了两年四个月。' },
         { at: 11.4, action: 'speak', text: '在这两年里，另外两件事也到位了：三维库变成一个 CDN 链接，而模型学会了写代码。' },
         { at: 18.0, action: 'speak', text: '三件事第一次同时成立，门槛就从会做动画，降到了会描述过程。' },
+        { at: 21.8, action: 'dim', target: 'q', dur: 0.5 },
+        { at: 21.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：但要记住边界：Safari 只在 macOS…
         { at: 22.0, action: 'speak', text: '但要记住边界：Safari 只在 macOS 26 之后默认开启。' },
       ],
     },
@@ -314,6 +328,9 @@ export const deck = {
       id: 'problem',
       title: 'PPT 的三个结构性缺陷',
       duration: 31,
+
+      beat: 'problem',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '问题 · 不是审美问题，是结构问题', x: 6, y: 5, w: 70 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '一屏，就是一帧', x: 6, y: 10, w: 70, size: 36 },
@@ -334,15 +351,22 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：PPT 的问题不是不好看，是结构性的。…
         { at: 0.9, action: 'reveal', target: 'c', dur: 0.5 },
         { at: 1.0, action: 'draw', target: 'c', dur: 7 },
         { at: 10.0, action: 'reveal', target: 'l', dur: 0.7 },
+        { at: 10.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 10.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：时间维度被丢掉了，观众要自己把这十二步的顺序…
         { at: 17.0, action: 'reveal', target: 'q', dur: 0.6 },
+        { at: 17.8, action: 'dim', target: 'l', dur: 0.5 },
+        { at: 17.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：而且好坏只能靠肉眼：改一版，你说不出是好了还…
         { at: 22.0, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: 'PPT 的问题不是不好看，是结构性的。' },
         { at: 4.6, action: 'speak', text: '同一件事，静态一页只能给一个信息单元；按构造顺序讲，是十二步。' },
         { at: 11.0, action: 'speak', text: '时间维度被丢掉了，观众要自己把这十二步的顺序脑补出来。' },
         { at: 18.0, action: 'speak', text: '而且好坏只能靠肉眼：改一版，你说不出是好了还是坏了。' },
+        { at: 22.8, action: 'dim', target: 'q', dur: 0.5 },
+        { at: 22.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：但要公平：如果信息本来就是并列的，这个差距就…
         { at: 23.0, action: 'speak', text: '但要公平：如果信息本来就是并列的，这个差距就是零，静态反而更快。' },
         { at: 26.5, action: 'pause', hint: '你最近一次讲的东西，有顺序吗？' },
       ],
@@ -360,6 +384,9 @@ export const deck = {
       id: 'determinism',
       title: '优势一：确定性时间轴',
       duration: 22,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '优势 1 / 4', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '画面是时间的纯函数', x: 6, y: 10, w: 70, size: 38 },
@@ -373,19 +400,24 @@ export const deck = {
           { badge: '导', text: '可导出：逐帧 seek 出图，帧与帧之间不闪' },
           { badge: '复', text: '可复现：评审时每个人看到的关键帧完全一样' },
         ] },
-        { id: 'm', group: 'metric', type: 'metric', value: 0, suffix: ' 字节', label: '同一 t 双渲染的差异（实测）', tone: 'good', x: 66, y: 70, w: 30, decimals: 0 },
-        { id: 'b', group: 'boundary', type: 'text', role: 'body', text: '代价：render(t) 必须是纯函数 —— 不能用「当前时间戳」做淡入、不能靠物理引擎的累积状态。这是拿"有状态动画"换来的。', x: 66, y: 82, w: 30, size: 13 },
+        { id: 'm', group: 'metric', type: 'metric', value: 0, suffix: ' 字节', label: '同一 t 双渲染的差异（实测）', tone: 'good', x: 66, below: 'l', gap: 2, w: 30, decimals: 0 },
+        { id: 'b', group: 'boundary', type: 'text', role: 'body', text: '代价：render(t) 必须是纯函数 —— 不能用「当前时间戳」做淡入、不能靠物理引擎的累积状态。这是拿"有状态动画"换来的。', x: 66, below: 'm', gap: 1.6, w: 30, size: 13 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：第一个优势：画面是时间的纯函数。…
         { at: 0.9, action: 'reveal', target: 'c', dur: 0.5 },
         { at: 1.0, action: 'draw', target: 'c', dur: 6 },
         { at: 8.0, action: 'reveal', target: 'l', dur: 0.7 },
         { at: 12.0, action: 'reveal', target: 'm', dur: 0.6 },
+        { at: 12.2, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 12.2, action: 'spotlight', target: 'm', dur: 0.5 },   // G16 焦点：所以可以拖动、可以断言、可以逐帧导出，评审时…
         { at: 15.5, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '第一个优势：画面是时间的纯函数。' },
         { at: 4.8, action: 'speak', text: '同一个时刻永远渲染出同一帧，不管你怎么跳、跳几次。' },
         { at: 12.4, action: 'speak', text: '所以可以拖动、可以断言、可以逐帧导出，评审时人人看到一样的东西。' },
+        { at: 15.8, action: 'dim', target: 'm', dur: 0.5 },
+        { at: 15.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：代价是：不能用时间戳做淡入，也不能靠物理引擎…
         { at: 16.0, action: 'speak', text: '代价是：不能用时间戳做淡入，也不能靠物理引擎的累积状态。' },
       ],
     },
@@ -395,6 +427,9 @@ export const deck = {
       id: 'process',
       title: '优势二：过程可见，注意力可控',
       duration: 30,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '优势 2 / 4', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '一笔一笔，顺序就是知识', x: 6, y: 10, w: 70, size: 38 },
@@ -414,7 +449,12 @@ export const deck = {
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
         { at: 0.9, action: 'reveal', target: 'c', dur: 0.5 },
-        { at: 1.0, action: 'draw', target: 'c', dur: 12 },
+        // 构造过程分三段画 —— 逐笔的意义就是「每一步都停得住」
+        { at: 1.0, action: 'draw', target: 'c', from: 0, to: 0.35, dur: 4 },
+        { at: 5.2, action: 'hold', dur: 1.5 },
+        { at: 6.8, action: 'draw', target: 'c', from: 0.35, to: 0.7, dur: 4 },
+        { at: 11.0, action: 'hold', dur: 1.5 },
+        { at: 12.6, action: 'draw', target: 'c', from: 0.7, to: 1, dur: 4 },
         { at: 9.0, action: 'spotlight', target: 'c', dur: 0.6 },     // ← 正在讲 spotlight，画面就在 spotlight
         { at: 14.0, action: 'reset', target: null },
         { at: 13.8, action: 'reveal', target: 'l', dur: 0.7 },
@@ -434,6 +474,9 @@ export const deck = {
       id: 'verify',
       title: '优势三：质量可以被断言',
       duration: 34,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '优势 3 / 4 · 18 项门禁', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '十六项门禁，在真浏览器里跑', x: 6, y: 10, w: 72, size: 36 },
@@ -453,10 +496,15 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：第三个优势最有意思：质量第一次可以被断言。…
         { at: 0.9, action: 'reveal', target: 'c', dur: 0.5 },
         { at: 1.0, action: 'draw', target: 'c', dur: 9 },
         { at: 11.0, action: 'reveal', target: 'l', dur: 0.7 },
         { at: 17.5, action: 'reveal', target: 'w', dur: 0.6 },
+        { at: 22.4, action: 'dim', target: 'w', dur: 0.5 },
+        { at: 22.4, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：门禁不只是防回归，它能让作者发现自己看不见的…
+        { at: 17.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 17.8, action: 'spotlight', target: 'w', dur: 0.5 },   // G16 焦点：它们真的抓到过笔尖啪地消失，抓到过四个元素同…
         { at: 23.0, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '第三个优势最有意思：质量第一次可以被断言。' },
         { at: 5.4, action: 'speak', text: '十六项门禁在真浏览器里跑，每一幕都要拿出证据。' },
@@ -472,6 +520,9 @@ export const deck = {
       id: 'scenes',
       title: '什么时候用，什么时候不用',
       duration: 26,
+
+      beat: 'boundary',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '场景', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '有顺序，才值得逐笔', x: 6, y: 10, w: 70, size: 36 },
@@ -488,14 +539,19 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'ca', dur: 0.5 },   // G16 焦点：该用的地方：讲机制、讲算法顺序、讲架构怎么演…
         { at: 0.9, action: 'reveal', target: ['la', 'ca'], dur: 0.4 },
         { at: 1.0, action: 'draw', target: 'ca', dur: 6 },
         { at: 7.4, action: 'reveal', target: ['lb', 'cb'], dur: 0.4 },
         { at: 7.5, action: 'draw', target: 'cb', dur: 0.05 },
+        { at: 7.8, action: 'dim', target: 'ca', dur: 0.5 },
+        { at: 7.8, action: 'spotlight', target: 'cb', dur: 0.5 },   // G16 焦点：不该用的地方：只是并列的事实、纯结论、读者要…
         { at: 8.6, action: 'reveal', target: 'l', dur: 0.7 },
         { at: 15.5, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '该用的地方：讲机制、讲算法顺序、讲架构怎么演进。' },
         { at: 8.0, action: 'speak', text: '不该用的地方：只是并列的事实、纯结论、读者要反复检索的资料。' },
+        { at: 15.8, action: 'dim', target: 'cb', dur: 0.5 },
+        { at: 15.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：判据只有一条：信息里有没有顺序。有顺序就逐笔…
         { at: 16.0, action: 'speak', text: '判据只有一条：信息里有没有顺序。有顺序就逐笔，只是并列就一次给完。' },
         { at: 22.6, action: 'speak', text: '逐笔的价值是顺序，不是动起来。' },
       ],
@@ -506,6 +562,9 @@ export const deck = {
       id: 'who',
       title: '四类人，四种用法',
       duration: 35,
+
+      beat: 'payoff',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '人群', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '谁最适合用它', x: 6, y: 10, w: 70, size: 36 },
@@ -520,9 +579,16 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.5, action: 'spotlight', target: 'p1', dur: 0.5 },   // G16 焦点：四类人最适合用它。工程师做技术分享，讲机制和…
         { at: 1.0, action: 'reveal', target: 'p1', dur: 0.6 },
+        { at: 6.8, action: 'dim', target: 'p1', dur: 0.5 },
+        { at: 6.8, action: 'spotlight', target: 'p2', dur: 0.5 },   // G16 焦点：老师和课程作者，讲构造过程 —— 比如一条曲…
         { at: 7.0, action: 'reveal', target: 'p2', dur: 0.6 },
+        { at: 13.4, action: 'dim', target: 'p2', dur: 0.5 },
+        { at: 13.4, action: 'spotlight', target: 'p3', dur: 0.5 },   // G16 焦点：产品和架构设计者，讲架构怎么一步步演进过来。…
         { at: 13.6, action: 'reveal', target: 'p3', dur: 0.6 },
+        { at: 19.8, action: 'dim', target: 'p3', dur: 0.5 },
+        { at: 19.8, action: 'spotlight', target: 'p4', dur: 0.5 },   // G16 焦点：还有做 agent 的人：让 agent 汇…
         { at: 20.0, action: 'reveal', target: 'p4', dur: 0.6 },
         { at: 25.6, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 28.5, action: 'reveal', target: 'b', dur: 0.5 },
@@ -530,6 +596,8 @@ export const deck = {
         { at: 7.0, action: 'speak', text: '老师和课程作者，讲构造过程 —— 比如一条曲线是怎么被算出来的。' },
         { at: 13.6, action: 'speak', text: '产品和架构设计者，讲架构怎么一步步演进过来。' },
         { at: 20.0, action: 'speak', text: '还有做 agent 的人：让 agent 汇报它到底做了什么，动画比一段文字清楚得多。' },
+        { at: 28.8, action: 'dim', target: 'p4', dur: 0.5 },
+        { at: 28.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：反过来说：信息里没有顺序，这四类人的收益都会…
         { at: 29.0, action: 'speak', text: '反过来说：信息里没有顺序，这四类人的收益都会归零。' },
       ],
       quiz: {
@@ -547,6 +615,9 @@ export const deck = {
       id: 'end',
       title: '它不是万能药',
       duration: 18,
+
+      beat: 'payoff',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '边界与结论', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '别把动画当万能药', x: 6, y: 10, w: 70, size: 36 },
@@ -560,11 +631,16 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：它不万能：要检索的资料、要精确排版的 PPT…
         { at: 0.9, action: 'reveal', target: 'l', dur: 0.8 },
         { at: 9.0, action: 'reveal', target: 'q', dur: 0.7 },
+        { at: 9.4, action: 'dim', target: 'l', dur: 0.5 },
+        { at: 9.4, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：记住一句话：逐笔的价值是顺序，不是动起来。…
         { at: 13.0, action: 'reveal', target: 'cta', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '它不万能：要检索的资料、要精确排版的 PPTX、只要结论的三十秒，都别用它。' },
         { at: 9.6, action: 'speak', text: '记住一句话：逐笔的价值是顺序，不是动起来。' },
+        { at: 13.6, action: 'dim', target: 'q', dur: 0.5 },
+        { at: 13.6, action: 'spotlight', target: 'cta', dur: 0.5 },   // G16 焦点：没有顺序信息的时候，动画只是慢。…
         { at: 13.8, action: 'speak', text: '没有顺序信息的时候，动画只是慢。' },
       ],
       quiz: {

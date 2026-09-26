@@ -181,6 +181,15 @@ layout{proseCoverageFloor}
 
 ## 五、教学法侧：5 条可落地的（带证据）
 
+> **状态：已落地。** 这一节的 5 条已经变成 `scripts/verify.mjs` 里的断言，
+> 详见 `references/authoring-gates.md` 的 G15 家族 / G16 / G17 / G19 / G6b。
+> 落地时抓到的真问题（fourier 一口气画 27.8s、35 个幕只有 5 个用过焦点、
+> 两处预测题送答案）记在 `references/design-notes.md` §5。
+>
+> 一处**没有**照做：原文提到的"自动暂停"没有当成卖点 ——
+> 研究结论是长视频里自动暂停无益，证据支持的是**学习者自己控制分段**，
+> 所以 `pause` 动作和 `quiz.at` 都做成"到点停、点一下继续"，而不是替学习者决定。
+
 1. **段长门禁，补充 G9。**
    transient information effect 的证据变量是**段长**，不是"信息率"。
    做法：DSL 加 `hold(d)`（全静态、可重读），门禁要求**任意连续变化段 ≤ 8–10s，

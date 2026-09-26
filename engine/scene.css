@@ -146,10 +146,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
   max-width: 74%; padding: 6px 18px; border-radius: 999px;
   background: color-mix(in srgb, var(--bg) 88%, transparent); border: 1px solid var(--line);
   font-size: 16px; line-height: 1.4; white-space: nowrap; color: var(--ink);
-  opacity: 0; transition: opacity .18s;
+  /* ⚠️ 这里**不能**用 CSS transition —— CSS transition 有自己的时钟，不属于 render(t)。
+     踩过：字幕用 transition 淡入，G4 在同一个 t 连拍两次，一次抓到 opacity=0.084、
+     一次抓到 1，门禁 1/3 概率随机变红。透明度改由 render() 按 t 算（见 scene.js）。 */
+  opacity: 0;
   backdrop-filter: blur(6px); text-align: center; pointer-events: none; z-index: 5;
 }
-#deck-caption[data-on="1"] { opacity: 1; }
 
 /* 字幕占用的安全带（设计坐标 y ≥ 87%，即 626 设计 px 以下）不许放内容。
    导出时字幕要保留 —— 视频没有音轨，字幕是唯一的旁白通道。 */
@@ -216,10 +218,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
   padding: 14px 22px; border-radius: 12px; cursor: pointer;
   background: color-mix(in srgb, var(--bg) 92%, transparent); border: 1px solid var(--accent);
   font-size: 17px; color: var(--ink); text-align: center;
-  opacity: 0; pointer-events: none; transition: opacity .16s, transform .16s;
+  opacity: 0; pointer-events: none;   /* 同上：不用 transition，暂停遮罩只在播放中由 pauseOpen 控制 */
   backdrop-filter: blur(6px); z-index: 6;
 }
-#deck-pause[data-on="1"] { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+#deck-pause[data-on="1"] { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
 
 /* ---------------------------------------------------------------- 图片 */
 .el-image { overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); }

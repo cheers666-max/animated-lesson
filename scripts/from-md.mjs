@@ -150,7 +150,7 @@ function jsLit(v, indent = 0) {
   if (oneLine.length < 110) return `{ ${oneLine} }`;
   return `{\n${keys.map((k) => `${pad}  ${k}: ${jsLit(v[k], indent + 1)}`).join(',\n')},\n${pad}}`;
 }
-function buildScene(sec, si, srcRel) {
+function buildScene(sec, si, srcRel, isLast) {
   const body = [...sec.paras.map((p) => p.text), ...sec.bullets.map((b) => b.text), ...sec.quotes.map((q) => q.text)].join(' ');
   const nums = numbersIn(body);
   const withBase = nums.filter((n) => hasBaselineNear(body, n.idx));
@@ -176,20 +176,47 @@ function buildScene(sec, si, srcRel) {
   push({ id: 't', group: 'head', type: 'text', role: 'title', text: sec.title.slice(0, 34), x: 6, w: 84, size: 34, below: 'k', gap: 1.6 });
   beats.push({ at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 });
 
+  // ---- 旁白是脊梁（iart: "The VO is the spine; visuals illustrate the line being
+  // spoken, never lead it."）----
+  // 老写法每幕只发一条 1.2s 的旁白，元素却在 4.2s 之后才出现 —— 观众看到的是
+  // 「话说完了一屏东西才长出来」。G17（coherence）会正确地判这些元素是孤儿。
+  // 新写法：**每个揭示点配一条旁白，文案从该元素自己的原文派生**，时长由旁白驱动。
+  const say = [];
+  let prevFocus = null;
+  // narrate(at, text, target)：发一条旁白，**同时**给被讲的那个元素打聚光灯。
+  // 生成器知道每个揭示点讲的是谁，所以 G16（旁白期间必须有焦点）可以开箱满足 ——
+  // 而不是等作者事后一帧帧补 spotlight。
+  // 返回值 = **这条旁白说完之后的绝对时刻**（不是增量）。
+  // 踩过：老写法 `clock = narrate(clock + 3.6, ...)` 用增量推进，而旁白时长按
+  // 字数算，两者不一致 → 下一条旁白在上一条还没说完时就开口 → G5 字幕对不上。
+  const narrate = (at, text, target = null, gap = 0.8) => {
+    const t = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 26);
+    if (target && target !== prevFocus) {
+      beats.push({ at: +Math.max(0.2, at - 0.3).toFixed(1), action: 'spotlight', target, dur: 0.5 });
+      if (prevFocus) beats.push({ at: +Math.max(0.2, at - 0.3).toFixed(1), action: 'dim', target: prevFocus, dur: 0.5 });
+      prevFocus = target;
+    }
+    if (!t) return at + 1.6;
+    say.push({ at: +at.toFixed(1), action: 'speak', text: t });
+    return at + Math.max(1.6, t.length / 4.6) + gap;   // 说完 + 一口气
+  };
+  let clock = 0.9;
+
   // 主张：首段原文
   if (sec.paras[0]) {
     push({ id: 'claim', group: 'claim', type: 'text', role: 'body', text: sec.paras[0].text.slice(0, 150), x: 6, w: 60, size: 17, below: 't', gap: 3 });
-    beats.push({ at: 0.9, action: 'reveal', target: 'claim', dur: 0.5 });
-    speaks.push({ at: 1.2, action: 'speak', text: sec.paras[0].text.slice(0, 42) });   // TODO 改写成本人口吻
+    beats.push({ at: clock, action: 'reveal', target: 'claim', dur: 0.5 });
+    clock = narrate(clock + 0.4, sec.paras[0].text, 'claim');
+  } else {
+    clock = narrate(clock, sec.title, 't');
   }
 
   // 机制：列表（最多 5 条，逐条出现 —— 天然满足 G9 的节流）
   const bullets = sec.bullets.slice(0, 5);
-  let clock = 4.5;
   if (bullets.length) {
     push({ id: 'l', group: 'mech', type: 'list', x: 6, w: 60, items: bullets.map((b, i) => ({ badge: String(i + 1), text: b.text.slice(0, 90) })), below: lastId, gap: 2.4 });
-    beats.push({ at: 4.2, action: 'reveal', target: 'l', dur: 0.7 });
-    clock = 6.0;
+    beats.push({ at: clock, action: 'reveal', target: 'l', dur: 0.7 });
+    clock = narrate(clock + 0.6, bullets[0].text, 'l');
   }
 
   // 代码：原样搬运。h 给足 —— code 是唯一必须显式给高的类型（滚动容器）
@@ -198,7 +225,7 @@ function buildScene(sec, si, srcRel) {
     const lines = c.code.split('\n').slice(0, 10).length;
     push({ id: 'code', group: 'code', type: 'code', lang: c.lang, code: c.code.split('\n').slice(0, 10).join('\n'), x: 6, w: 60, h: Math.min(30, 4 + lines * 2.6), below: lastId, gap: 2.4 });
     beats.push({ at: clock, action: 'reveal', target: 'code', dur: 0.6 });
-    clock += 1.2;
+    clock = narrate(clock + 0.6, `代码见左：${c.lang}`, 'code');
   }
 
   // 数据画面：通用柱状图，走右栏。**已经 data-driven**，所以开箱就能过 G11。
@@ -209,15 +236,15 @@ function buildScene(sec, si, srcRel) {
     elements.push({ id: 'm', group: 'num', type: 'metric', value: Math.abs(n0.v) || 0, label: n0.raw, x: 68, y: 24, w: 26, decimals: 2, tone: 'accent' });
     lastRight = 'm';
     beats.push({ at: clock, action: 'countUp', target: 'm', dur: 1.6 });
-    clock += 2.4;
+    clock = narrate(clock + 1.8, `量级：${n0.raw}`, 'm');
   }
   if (nums.length >= 2) {
     const bars = nums.slice(0, 6).map((n, i) => ({ k: n.raw, v: Math.abs(n.v) || 1, tone: i % 3 === 0 ? 'accent' : i % 3 === 1 ? 'accent-2' : 'good' }));
     elements.push({ id: 'c', group: 'canvas', type: 'canvas2d', x: 68, y: 22, w: 26, h: 34, monotonic: true, draw: 'drawAutoBars', data: { bars, unit: '' } });
     lastRight = 'c';
     beats.push({ at: clock, action: 'reveal', target: 'c', dur: 0.4 });
-    beats.push({ at: clock + 0.1, action: 'draw', target: 'c', dur: 4 });
-    clock += 4.6;
+    beats.push({ at: clock + 0.1, action: 'draw', target: 'c', dur: 3.4 });
+    clock = narrate(clock + 3.6, `看右图：${bars[0].k} 对 ${bars[bars.length - 1].k}`, 'c');
   }
 
   // 量级：自动抽出的数字（这是"内容不简单"的关键一环）。跟在柱状图下面
@@ -226,28 +253,37 @@ function buildScene(sec, si, srcRel) {
     elements.push({ id: 'num', group: 'num', type: 'text', role: 'quote', text: `量级（原文抽出）：${top.map((n) => n.raw).join(' · ')}`, x: 68, w: 26, size: 15, below: 'c', gap: 2 });
     lastRight = 'num';
     beats.push({ at: clock, action: 'reveal', target: 'num', dur: 0.6 });
-    clock += 1.2;
+    clock = narrate(clock + 0.6, `量级：${top.map((n) => n.raw).join('、')}`, 'num');
   }
 
   // 边界：原文里那几句"但是/除非/只在"—— 逐字搬运，不自己编
   if (boundaryText) {
     push({ id: 'b', group: 'boundary', type: 'text', role: 'body', text: `边界：${boundaryText.slice(0, 120)}`, x: 6, w: 60, size: 14, below: lastId, gap: 2.6 });
     beats.push({ at: clock, action: 'reveal', target: 'b', dur: 0.5 });
-    clock += 1.4;
+    clock = narrate(clock + 0.6, `边界：${boundaryText}`, 'b');
   }
 
-  // 时长：按旁白字数预算（4.6 字/秒）+ 收尾，夹在 [14, 40]
-  const speakChars2 = speaks.reduce((a, sp) => a + sp.text.length, 0);
-  const duration = Math.max(14, Math.min(40, Math.round(clock + speakChars2 / 4.6 + 2)));
+  // 时长：clock 已经是"最后一条旁白说完"的时刻（旁白驱动揭示），+ 收尾呼吸
+  const duration = Math.max(14, Math.min(46, Math.round(clock + 2.5)));
 
   // 引用块 → 收尾金句
   if (sec.quotes.length) {
     elements.push({ id: 'q', group: 'concl', type: 'text', role: 'quote', text: sec.quotes[0].text.slice(0, 110), x: 6, w: 60, size: 17, below: lastId, gap: 3 });
     beats.push({ at: Math.max(clock, duration - 5), action: 'reveal', target: 'q', dur: 0.6 });
+    narrate(Math.max(clock, duration - 5) + 0.6, sec.quotes[0].text, 'q', 1.4);
   }
 
+  // 叙事节拍：**生成器替作者做机械判断**（位置 + 有没有边界句），
+  // 语义判断（这一幕到底算 mechanism 还是 evidence）留给作者改。
+  let beat;
+  if (si === 0) beat = 'hook';
+  else if (boundaryText && !isLast) beat = 'boundary';
+  else if (isLast) beat = 'payoff';
+  else if (nums.length >= 2) beat = 'evidence';
+  else beat = 'mechanism';
+
   return {
-    scene: { id, title: sec.title.slice(0, 34), duration, elements, beats: [...beats, ...speaks].sort((a, b) => a.at - b.at) },
+    scene: { id, title: sec.title.slice(0, 34), duration, beat, elements, beats: [...beats, ...say].sort((a, b) => a.at - b.at) },
     nums, withBase, hasBoundary, srcLine: sec.line,
   };
 }
@@ -258,7 +294,7 @@ const md = readFileSync(srcAbs, 'utf8');
 const srcRel = relative(ROOT, srcAbs);
 const all = parse(md);
 const sections = all.slice(0, MAX);
-const built = sections.map((s, i) => buildScene(s, i, srcRel));
+const built = sections.map((s, i) => buildScene(s, i, srcRel, i === sections.length - 1));
 
 const gaps = [];
 built.forEach((b, i) => {
@@ -269,6 +305,10 @@ built.forEach((b, i) => {
   gaps.push(`${at}: 画面还是通用柱状图（drawAutoBars）—— 要换成真正解释这件事的画法`);
   gaps.push(`${at}: 旁白是从原文首句抄的草稿 —— 必须改写成本人口吻（TODO）`);
 });
+
+// 一句话核心的**占位**（文件名 + 首个小节标题）。生成器替不了这一步 ——
+// 说不清一句话就该砍范围，而不是缩小字号。
+const oneLine = `${basename(srcAbs, '.md')}：${(sections[0]?.title ?? '').slice(0, 40)}`.slice(0, 60);
 
 const head = `/**
  * ${basename(OUT)} —— 由 scripts/from-md.mjs 从 ${srcRel} 生成
@@ -309,9 +349,28 @@ function drawAutoBars(ctx, t, el, api) {
 }
 
 export const deck = {
-  meta: { title: ${JSON.stringify(basename(srcAbs, '.md'))}, subtitle: '从 ${srcRel} 生成的骨架', theme: ${JSON.stringify(THEME)} },
+  meta: {
+    title: ${JSON.stringify(basename(srcAbs, '.md'))},
+    subtitle: '从 ${srcRel} 生成的骨架',
+    // TODO 用**一句话**说出看完该记住的那件事。生成器只能给占位 —— 说不清就该砍范围。
+    oneLine: ${JSON.stringify(oneLine)},
+    theme: ${JSON.stringify(THEME)},
+  },
   scenes: [
 `;
+
+// payoff 幕不许被饿死：叙事门禁要求每个节拍 ≥8% 时长。收尾是最后一印象，
+// 被切成 7% 就变成"装饰性收尾" —— 生成器直接把最后一幕撑到 9% 以上。
+{
+  const total = built.reduce((a, b) => a + b.scene.duration, 0);
+  const last = built[built.length - 1];
+  const floor = Math.ceil(total * 0.09);
+  if (last.scene.beat === 'payoff' && last.scene.duration < floor) {
+    const d = floor - last.scene.duration;
+    last.scene.duration = floor;
+    last.scene.beats.push({ at: floor - d - 0.5, action: 'hold', dur: Math.max(1.6, d - 0.6) });
+  }
+}
 
 const body = built.map(({ scene }) => {
   const els = scene.elements.map((e) => emitObj(e, 8, e.draw === 'drawAutoBars' ? 'drawAutoBars' : null)).join(',\n');
@@ -320,6 +379,7 @@ const body = built.map(({ scene }) => {
       id: '${scene.id}',
       title: '${esc(scene.title)}',
       duration: ${scene.duration},
+      beat: '${scene.beat}',
       elements: [
 ${els},
       ],

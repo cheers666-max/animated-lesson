@@ -503,7 +503,22 @@ for (let si = 0; si < scenes.length; si++) {
   await at(si, tLate); const dB = await shot();
   if (dA !== dB) {
     detFail++;
-    add('G4', false, `第 ${si + 1} 幕不确定`, `同一 t=${tLate}s 两次渲染不同 —— 场景里可能用了 Date.now/Math.random（时间只能来自传入的 t）`);
+    // 报错必须自己指出"哪里在变"，否则每次抖动都要人肉写探针定位。
+    // （踩过：字幕的 CSS transition 让 G4 1/3 概率随机变红，光看"两次不同"无从下手。）
+    const why = await ev(`(() => {
+      const snap = () => { const o = {};
+        for (const n of document.querySelectorAll('#stage [data-el], #deck-caption, #deck-pause, #deck-tag, #deck-bar *')) {
+          const r = n.getBoundingClientRect(), cs = getComputedStyle(n);
+          o[n.id || n.dataset.el || n.className] = [r.x.toFixed(2), r.y.toFixed(2), r.width.toFixed(2), r.height.toFixed(2), cs.opacity, cs.transform].join('|');
+        }
+        return o; };
+      const a = snap();
+      return new Promise((res) => setTimeout(() => { const b = snap();
+        res(Object.keys(a).filter((k) => a[k] !== b[k]).slice(0, 3).map((k) => k + ' [' + a[k] + '] vs [' + b[k] + ']')); }, 260));
+    })()`);
+    add('G4', false, `第 ${si + 1} 幕不确定`,
+      `同一 t=${tLate}s 两次渲染不同 —— 差在：${(why ?? []).join(' | ') || '（截图级差异，非 DOM）'}`
+      + `　常见原因：用了 Date.now/Math.random，或某个元素带了 CSS transition/animation（自带时钟，不属于 render(t)）`);
   }
   // 2D canvas 的像素级确定性（比截图更精确，且能定位到元素）
   const sig = async () => ev(`(() => [...document.querySelectorAll('.el-canvas canvas')].map((c) => {
@@ -604,6 +619,81 @@ if (!detFail) add('G4', true, '确定性渲染', '同 t 双渲染逐字节一致
     await ev(`window.DECK.hideQuiz()`);
   }
   add('G6', bad.length === 0, `预测题可交互（${withQuiz.length} 幕）`, bad.join(' | ') || '选项数正确、点选标对错、答错有解释');
+
+  // G6c 题要**自己弹出来**。
+  // 由来：G6 一直是直接调 `window.DECK.showQuiz()` 开题的，于是"播放到该问的时候
+  // 会不会自动弹"这条路径从来没被覆盖 —— 而 tick 里写的是 `this.showQuiz?.()`，
+  // this 根本不是 deck，一直是空操作。G6 全绿，功能全坏。
+  // 教训：门禁只能证明它**够得着**的那条路径；够不着的路径要和没测一样对待。
+  const autoQuiz = await ev(`(async () => {
+    const D = window.DECK, out = [];
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    for (let i = 0; i < D.spec.scenes.length; i++) {
+      const sc = D.spec.scenes[i];
+      if (!sc.quiz) continue;
+      const overlay = () => document.getElementById('quiz').dataset.on === '1';
+      // ① 幕中提问：从 at 前一点开始真播
+      if (sc.quiz.at != null) {
+        D.goScene(i, { at: Math.max(0, sc.quiz.at - 0.6) });
+        D.hideQuiz(); D.play();
+        for (let k = 0; k < 40 && !overlay(); k++) await sleep(100);
+        const openedAt = +D.t.toFixed(2);
+        // 点「继续」→ 必须**接着播本幕**，否则答案永远看不到
+        const cont = [...document.querySelectorAll('#quiz button')].find((b) => /继续/.test(b.textContent));
+        cont?.click();
+        await sleep(500);
+        const tAfter = +D.t.toFixed(2);
+        out.push({ id: sc.id, how: 'mid', opened: overlay() === false, t: openedAt,
+                   paused: !D.playing === false, resumed: D.playing && tAfter > openedAt });
+        D.hideQuiz(); D.pause();
+      }
+      // ② 幕尾复习题：从幕尾前一点开始真播。
+      // 有 at 的幕跳过 —— 它的题在幕中已经问过，幕尾 quizShown 本来就该是 true。
+      if (sc.quiz.at != null) continue;
+      D.goScene(i, { at: Math.max(0, sc.duration - 0.5) });
+      D.hideQuiz(); D.play();
+      for (let k = 0; k < 40 && !overlay(); k++) await sleep(100);
+      const openedEnd = overlay();
+      const contEnd = [...document.querySelectorAll('#quiz button')].find((b) => /继续/.test(b.textContent));
+      contEnd?.click();
+      await sleep(400);
+      // 非末幕：应进入下一幕并继续播；末幕：停住即可
+      const advanced = D.index > i || i === D.spec.scenes.length - 1;
+      out.push({ id: sc.id, how: 'end', opened: openedEnd, t: +D.t.toFixed(2), paused: true, resumed: advanced });
+      D.hideQuiz(); D.pause();
+    }
+    return out;
+  })()`);
+  const badAuto = autoQuiz.filter((q) => !q.opened || !q.paused || !q.resumed);
+  add('G6c', badAuto.length === 0, '题自己弹出来、停住、答完接着播',
+    badAuto.length
+      ? badAuto.map((q) => `scene(${q.id}) ${q.how === 'mid' ? '幕中' : '幕尾'}题：弹出=${q.opened} 暂停=${q.paused} 继续后接着播=${q.resumed}`).join(' | ')
+      : autoQuiz.map((q) => `${q.id} ${q.how === 'mid' ? '幕中' : '幕尾'}@${q.t}s 自动弹出 · 暂停 · 继续后接着播`).join(' · ') || '（没有带题的幕）');
+
+  // G6b 先问后讲的时序：带 quiz.at 的题，那一刻之前不能算"已经问过"。
+  // 光有 quiz.at 字段不等于真的在幕中间提问 —— 这条是防止它变成装饰性声明。
+  const timing = await ev(`(() => {
+    const out = [];
+    window.DECK.spec.scenes.forEach((sc, i) => {
+      if (sc.quiz?.at == null) return;
+      const dur = sc.duration;
+      window.DECK.goScene(i, { at: Math.max(0, sc.quiz.at - 0.5) });
+      const before = window.DECK.state().quizShown;
+      window.DECK.goScene(i, { at: Math.min(dur, sc.quiz.at + 0.5) });
+      const after = window.DECK.state().quizShown;
+      const answersAt = (sc.beats ?? []).filter((b) => b.at > sc.quiz.at
+        && ['reveal', 'countUp', 'draw', 'grow'].includes(b.action)).length;
+      out.push({ id: sc.id, at: sc.quiz.at, before, after, answersAt });
+    });
+    return out;
+  })()`);
+  const badTiming = timing.filter((t) => t.before || !t.after || t.answersAt === 0);
+  add('G6b', badTiming.length === 0, '预测题在幕中间提出，答案在题之后',
+    badTiming.length
+      ? badTiming.map((t) => t.before ? `scene(${t.id}) 在 at=${t.at}s 之前就已标记问过`
+        : !t.after ? `scene(${t.id}) at=${t.at}s 之后仍未标记问过`
+        : `scene(${t.id}) at=${t.at}s 之后没有任何揭示 —— 问了却没答`).join(' | ')
+      : timing.map((t) => `${t.id}@${t.at}s 题后 ${t.answersAt} 个揭示`).join(' · ') || '（没有带 at 的题）');
 }
 
 // ---------------------------------------------------------------- G9 信息释放节流（「按笔画」的量化）
@@ -666,6 +756,239 @@ if (!detFail) add('G4', true, '确定性渲染', '同 t 双渲染逐字节一致
     if (worst && worst[1].length > CAP) offenders.push(`scene(${sc.id}) ${worst[1].length} 个信息单元在 ${(worst[0] * WIN).toFixed(1)}s 内同时出现: ${worst[1].join(', ')}`);
   }
   add('G9', offenders.length === 0, `信息释放节流（≤${CAP} 单元 / ${WIN}s）`, offenders.join(' | ') || lines.join(' · '));
+
+  // ---------------------------------------------------------------- G15 段长门禁
+  // 量的是「**有没有稳定帧可以指**」，不是「信息率」。
+  //
+  // 为什么是段长：transient information effect 的证据变量是信息在屏幕上停留多久，
+  // 不是每秒塞了多少。但这条门禁更直接的动机是**可指性** —— 旁白说"加到第二十一次
+  // 就很方了"的时候，画面必须有一个**停住的、能被指着说的**帧。连续变化 28 秒意味着
+  // 这句话落在一条一直在动的曲线上，观众对不上。在导出的视频里尤其致命（不能暂停、不能回看）。
+  //
+  // 注意区分：慢速推近（ken）不销毁信息，画面任何时刻都完整可读 —— 但它同样不提供
+  // 稳定帧，所以同样计入。规则统一为：一段连续变化 ≤ MAX_RUN，两段之间 ≥ HOLD_MIN 静态。
+  // DSL 用 { at, action:'hold', dur } 显式声明这个窗口，G15c 顺便验证声明是不是真的。
+  // ⚠️ 签名里**不含** spot/dim/flash —— 注意力引导不算信息变化（见下面的 sigOf）。
+  const MAX_RUN = 10, MAX_GAP = 12, HOLD_MIN = 1.2;
+  const pacing = await ev(`(() => {
+    const STEP = 0.1, HOLD_MIN = ${HOLD_MIN};
+    const out = [];
+    for (let i = 0; i < window.DECK.spec.scenes.length; i++) {
+      const sc = window.DECK.spec.scenes[i];
+      // 信息签名：**剔除 spot/dim/flash** —— 聚光灯只引导注意力，不增加信息，
+      // 所以它不该破坏"这段可以重读"。transient information effect 说的是**信息**，
+      // 不是"像素有没有动"。（踩过：给 photo 补注意力引导后，cue 落进 hold 里，
+      // G15c 判 hold 说谎 —— 是判据太粗，不是编排错了。）
+      const sigOf = (st) => {
+        const o = {};
+        for (const k of Object.keys(st)) {
+          if (k === '$cam') { o[k] = st[k]; continue; }
+          const { spot, dim, flash, ...info } = st[k];
+          o[k] = info;
+        }
+        return JSON.stringify(o);
+      };
+      const sigs = [];
+      for (let t = 0; t <= sc.duration + 1e-9; t = +(t + STEP).toFixed(3)) sigs.push(sigOf(window.DECK.probe(i, t)));
+      const chg = sigs.map((x, k) => k > 0 && x !== sigs[k - 1]);
+      let maxRun = 0, run = 0;
+      for (const c of chg) { run = c ? run + 1 : 0; if (run > maxRun) maxRun = run; }
+      // 从上一个「足够长的静态窗口」起，累计的变化时间
+      let acc = 0, worstAcc = 0, atWorst = 0, staticRun = 0;
+      for (let k = 0; k < chg.length; k++) {
+        if (chg[k]) { staticRun = 0; acc += STEP; if (acc > worstAcc) { worstAcc = acc; atWorst = k * STEP; } }
+        else { staticRun += STEP; if (staticRun >= HOLD_MIN) acc = 0; }
+      }
+      const badHolds = [];
+      for (const b of (sc.beats ?? []).filter((x) => x.action === 'hold')) {
+        for (let k = 1; k < chg.length; k++) {
+          const t = k * STEP;
+          if (t > b.at && t < b.at + b.dur && chg[k]) { badHolds.push(b.at); break; }
+        }
+      }
+      out.push({ id: sc.id, maxRun: +(maxRun * STEP).toFixed(1), worstAcc: +worstAcc.toFixed(1),
+                 atWorst: +atWorst.toFixed(1), badHolds, holds: (sc.beats ?? []).filter((x) => x.action === 'hold').length });
+    }
+    return out;
+  })()`);
+
+  const tooLong = pacing.filter((s) => s.maxRun > MAX_RUN);
+  const noPause = pacing.filter((s) => s.worstAcc > MAX_GAP);
+  const fakeHold = pacing.filter((s) => s.badHolds.length);
+  const paceLine = pacing.map((s) => `${s.id}: 最长 ${s.maxRun}s / 静默前累计 ${s.worstAcc}s${s.holds ? ` / hold×${s.holds}` : ''}`);
+
+  add('G15', tooLong.length === 0, `连续变化段 ≤ ${MAX_RUN}s（每段之后要有稳定帧可指）`,
+    tooLong.length
+      ? tooLong.map((s) => `scene(${s.id}) 连续变化 ${s.maxRun}s —— 观众拿不到任何中间态。拆成几段，段间插 hold`).join(' | ')
+      : paceLine.join(' · '));
+  add('G15b', noPause.length === 0, `每 ${MAX_GAP}s 内至少一个 ≥${HOLD_MIN}s 的可重读静态窗口`,
+    noPause.length
+      ? noPause.map((s) => `scene(${s.id}) 在 ${s.atWorst}s 附近有 ${s.worstAcc}s 连续churn 没有停顿 —— 加 { at, action:'hold', dur } 并调开动作`).join(' | ')
+      : '全程都有可重读的停顿');
+  // G15d 分段标量的端点必须对得上
+  // 由来：给 fourier 第一幕分段 draw 之后，**门禁全绿但动画是坏的** ——
+  // 后面那段在"还没轮到它"时把 p 提前设成了自己的 from，于是 t=0 就画出 2/3 的谐波。
+  // G4 只查同 t 一致、G15 只查变化模式，都看不见。是"把 p 随时间打出来"才发现的。
+  //
+  // ⚠️ 判据换了两次，都误报，记在这里免得再走：
+  //   ①「单调不减」→ 误报 instancing 的 countUp 64→1（故意的："64 次 draw call → 1 次"）
+  //   ②「步长 ≤ 声明速率 × 余量」→ 误报 ease('out') 的初始斜率（本来就该是线性的 3 倍）
+  //   ③ 现在这条：**只查端点**。每段开始前必须等于它的 from，结束后必须等于它的 to。
+  //      不用给缓动函数建模，也不假设方向 —— 精确且没有假阳性。
+  const EPS = 0.02;
+  const segs = await ev(`(() => {
+    const out = [];
+    const SC = ['draw', 'grow', 'countUp'];
+    const key = { draw: 'p', grow: 'grow', countUp: 'value' };
+    for (let i = 0; i < window.DECK.spec.scenes.length; i++) {
+      const sc = window.DECK.spec.scenes[i];
+      for (const el of sc.elements ?? []) {
+        for (const act of SC) {
+          const bs = (sc.beats ?? []).filter((b) => b.action === act && [].concat(b.target ?? []).includes(el.id));
+          if (bs.length < 2) continue;
+          const rows = [];
+          for (const b of bs) {
+            const d = b.dur ?? 0.6;
+            const probeAt = (t) => { const st = window.DECK.probe(i, Math.max(0, +t.toFixed(2)))[el.id]; return st ? +st[key[act]] : null; };
+            rows.push({ at: b.at, dur: d, from: b.from ?? 0, to: b.to ?? 1,
+                        before: probeAt(b.at - 0.05), after: probeAt(b.at + d + 0.05) });
+          }
+          out.push({ scene: sc.id, el: el.id, act, rows });
+        }
+      }
+    }
+    return out;
+  })()`);
+  const badSeg = [];
+  for (const g of segs) {
+    for (const r of g.rows) {
+      if (r.before == null || r.after == null) continue;
+      if (Math.abs(r.before - r.from) > EPS) {
+        badSeg.push(`scene(${g.scene}).${g.el} ${g.act}@${r.at}s：开始前是 ${r.before.toFixed(3)}，但声明的 from 是 ${r.from}`
+          + `（说明有别的段在未开始时把标量设成了自己的 from）`);
+        break;
+      }
+      if (Math.abs(r.after - r.to) > EPS) {
+        badSeg.push(`scene(${g.scene}).${g.el} ${g.act}@${r.at}s：结束后是 ${r.after.toFixed(3)}，但声明的 to 是 ${r.to}`);
+        break;
+      }
+    }
+  }
+  add('G15d', badSeg.length === 0, `分段标量的端点对得上（${segs.length} 个分段动画）`,
+    badSeg.length ? badSeg.slice(0, 3).join(' | ')
+      : segs.length ? `${segs.map((g) => `${g.scene}.${g.el}(${g.rows.length}段)`).join(', ')} 每段的 from/to 都兑现了` : '本课件没有分段标量动画');
+  add('G15d', badSeg.length === 0, `分段标量的端点对得上（${segs.length} 个分段动画）`,
+    badSeg.length ? badSeg.slice(0, 3).join(' | ')
+      : segs.length ? `${segs.map((g) => `${g.scene}.${g.el}(${g.rows.length}段)`).join(', ')} 每段的 from/to 都兑现了` : '本课件没有分段标量动画');
+
+  // ---------------------------------------------------------------- G16 / G17 教学法
+  // 这两条来自 Mayer 的 multimedia principles，也是 iart 的 diagram-animation 里
+  // 「Highlight the active element and dim the rest (focus + context)」的断言化。
+  //
+  // G16 signaling：旁白在讲的时候，画面上必须有**焦点**。
+  //   实测本仓库 7 份课件：35 个「内容元素 ≥4」的幕里只有 5 个用过 spotlight/dim。
+  //   也就是说大部分时间观众面对一屏元素、旁白在说其中某一个，而画面没有指。
+  // G17 coherence：每个内容元素都必须被编排引用，且**必须与旁白时间窗重叠** ——
+  //   出现了却从没被讲到（seductive detail），或者讲完了才出现，都是 coherence 违规。
+  const teaching = await ev(`(() => {
+    const STEP = 0.1, out = [];
+    for (let i = 0; i < window.DECK.spec.scenes.length; i++) {
+      const sc = window.DECK.spec.scenes[i];
+      const speaks = (sc.beats ?? []).filter((b) => b.action === 'speak')
+        .map((b) => ({ at: b.at, end: b.at + (b.dur ?? Math.max(1.6, b.text.length / 4.6)) }));
+      const content = (sc.elements ?? []).filter((e) => !['shape', 'image'].includes(e.type) && e.bleed !== true && e.static !== true);
+      // 旁白期间有没有焦点：任一样本时刻存在 spot>0.3 或 dim>0.3 的元素
+      let focused = 0, narrated = 0;
+      for (const sp of speaks) {
+        narrated++;
+        let has = false;
+        for (let t = sp.at; t <= sp.end + 1e-6; t = +(t + STEP).toFixed(2)) {
+          const st = window.DECK.probe(i, t);
+          for (const id of Object.keys(st)) {
+            if (id === '$cam') continue;
+            if ((st[id].spot ?? 0) > 0.3 || (st[id].dim ?? 0) > 0.3) { has = true; break; }
+          }
+          if (has) break;
+        }
+        if (has) focused++;
+      }
+      // 每个内容元素的可见窗口，是否与某条旁白重叠
+      const orphan = [];
+      for (const el of content) {
+        const bs = (sc.beats ?? []).filter((b) => [].concat(b.target ?? []).includes(el.id));
+        if (!bs.length) { orphan.push(el.id + '(没有任何 beat 引用)'); continue; }
+        let vis = null;
+        for (let t = 0; t <= sc.duration + 1e-6; t = +(t + STEP).toFixed(2)) {
+          const st = window.DECK.probe(i, t)[el.id];
+          if (st && st.opacity > 0.5) { vis = [t, sc.duration]; break; }
+        }
+        if (!vis) { orphan.push(el.id + '(从不可见)'); continue; }
+        const first = vis[0];
+        // 元素出现后，后面还有没有旁白？（"讲完了才出现" = 孤儿）
+        if (speaks.length && !speaks.some((sp) => sp.end > first + 0.2)) orphan.push(el.id + '(在 ' + first + 's 才出现，之后已无旁白)');
+      }
+      out.push({ id: sc.id, speaks: narrated, focused, content: content.length, orphan });
+    }
+    return out;
+  })()`);
+
+  const noFocus = teaching.filter((s) => s.content >= 4 && s.speaks > 0 && s.focused === 0);
+  const noFocusSome = teaching.filter((s) => s.content >= 4 && s.speaks > 0 && s.focused < s.speaks);
+  const orphans = teaching.filter((s) => s.orphan.length);
+  add('G16', noFocus.length === 0, '旁白期间画面必须有焦点（Mayer signaling）',
+    noFocus.length
+      ? noFocus.map((s) => `scene(${s.id}) 有 ${s.content} 个内容元素、${s.speaks} 条旁白，但全程没有任何 spotlight/dim —— 观众不知道该看哪`).join(' | ')
+      : teaching.filter((s) => s.content >= 4).map((s) => `${s.id}: ${s.focused}/${s.speaks} 条旁白有焦点`).join(' · '));
+  add('G17', orphans.length === 0, '每个内容元素都被讲到过（Mayer coherence）',
+    orphans.length
+      ? orphans.flatMap((s) => s.orphan.map((o) => `scene(${s.id}).${o}`)).slice(0, 5).join(' | ')
+      : `${teaching.reduce((a, s) => a + s.content, 0)} 个内容元素全部被编排引用且与旁白重叠`);
+  // G19 预测题不许送答案（retrieval ≠ recognition）
+  // 学习科学里"提取练习"和"再认"是两回事：正确答案原样躺在画面上时，
+  // 学生做的是"找不同"，不是"回忆"。
+  const leaks = await ev(`(() => {
+    const N = 6;   // 6 字重合就算送答案（中文 6 字已经是一句可辨认的断言）
+    const norm = (x) => String(x ?? '').replace(/[\s，。、；：？！"'（）()《》—…·]/g, '');
+    const out = [];
+    for (const sc of window.DECK.spec.scenes) {
+      if (!sc.quiz) continue;
+      // recall = 讲完再考记忆，答案本来就在画面上，不算违规。
+      // predict（默认）要求答案**在被问之前**不在画面上。
+      if ((sc.quiz.kind ?? 'predict') === 'recall') continue;
+      const right = (sc.quiz.opts ?? []).find((o) => o.ok);
+      if (!right) continue;
+      const opt = norm(right.t);
+      // 有 at：只看到那一刻为止已经出现过的元素（幕尾的题则看全幕）
+      const cut = sc.quiz.at;
+      const vis = (sc.elements ?? []).filter((e) => {
+        if (cut == null) return true;
+        const first = (sc.beats ?? []).filter((b) => [].concat(b.target ?? []).includes(e.id)
+          && ['reveal', 'draw', 'grow', 'countUp', 'morph'].includes(b.action)).map((b) => b.at);
+        return first.length && Math.min(...first) <= cut;
+      });
+      const onScreen = norm(vis.map((e) => [e.text, e.label, e.code,
+        ...(e.items ?? []).map((it) => it.text)].filter(Boolean).join(' ')).join(' '));
+      for (let k = 0; k + N <= opt.length; k++) {
+        const g = opt.slice(k, k + N);
+        if (onScreen.includes(g)) { out.push({ scene: sc.id, frag: g }); break; }
+      }
+    }
+    return out;
+  })()`);
+  const quizCount = await ev('window.DECK.spec.scenes.filter((sc) => sc.quiz).length');
+  add('G19', leaks.length === 0, '预测题不送答案（retrieval ≠ recognition）',
+    leaks.length
+      ? leaks.map((l) => `scene(${l.scene}) 正确选项的「${l.frag}」原样出现在画面文字里 —— 这不是预测题，是找不同`).join(' | ')
+      : `${quizCount} 道预测题，正确答案的关键短语都不在画面文字里`);
+
+  if (noFocusSome.length && !noFocus.length) {
+    warn(`${noFocusSome.length} 幕只有部分旁白带焦点`, noFocusSome.map((s) => `${s.id} ${s.focused}/${s.speaks}`).join(' · '));
+  }
+
+  add('G15c', fakeHold.length === 0, 'hold 声明与事实相符（声明静态就真的静态）',
+    fakeHold.length
+      ? fakeHold.map((s) => `scene(${s.id}) hold@${s.badHolds.join(',')}s 期间画面还在动 —— 声明说谎了`).join(' | ')
+      : `${pacing.reduce((a, s) => a + s.holds, 0)} 个 hold 声明全部属实`);
 
   // G9b 笔速：每帧同时有几笔在生长 —— 「按笔画」这件事必须可量化
   const pace = await ev(`(() => {

@@ -37,12 +37,19 @@ function drawAutoBars(ctx, t, el, api) {
 }
 
 export const deck = {
-  meta: { title: "optimization-checklist", subtitle: '从 ../../Projects/webgpu/docs/optimization-checklist.md 生成的骨架', theme: "ink" },
+  meta: {
+    title: "optimization-checklist",
+    subtitle: '从 ../../Projects/webgpu/docs/optimization-checklist.md 生成的骨架',
+    // TODO 用**一句话**说出看完该记住的那件事。生成器只能给占位 —— 说不清就该砍范围。
+    oneLine: "optimization-checklist：(前言)",
+    theme: "ink",
+  },
   scenes: [
     {
       id: '前言',
       title: '(前言)',
       duration: 20,
+      beat: 'hook',
       elements: [
         {
           id: "k",
@@ -113,16 +120,24 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "按\"先做、收益大、风险低\"排序。每条都标注了本机实测收益和怎么验证。" },
-        { at: 4.5, action: "reveal", target: "c", dur: 0.4 },
-        { at: 4.6, action: "draw", target: "c", dur: 4 },
-        { at: 9.1, action: "reveal", target: "num", dur: 0.6 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "按\"先做、收益大、风险低\"排序。每条都标注了本机实测" },
+        { at: 7.752173913043478, action: "reveal", target: "c", dur: 0.4 },
+        { at: 7.852173913043478, action: "draw", target: "c", dur: 3.4 },
+        { at: 11.1, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 11.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 11.4, action: "speak", text: "看右图：5 对 4" },
+        { at: 14.108695652173914, action: "reveal", target: "num", dur: 0.6 },
+        { at: 14.4, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 14.4, action: "dim", target: "c", dur: 0.5 },
+        { at: 14.7, action: "speak", text: "量级：5、153、4" }
       ],
     },
     {
       id: 'a-先修测量-不做这步-后面全是猜',
       title: 'A. 先修测量（不做这步，后面全是猜）',
-      duration: 24,
+      duration: 39,
+      beat: 'boundary',
       elements: [
         {
           id: "k",
@@ -224,18 +239,32 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "实测：16 个 compute pass 让 GPU 时间从 1.5ms 涨到 12" },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "reveal", target: "c", dur: 0.4 },
-        { at: 6.1, action: "draw", target: "c", dur: 4 },
-        { at: 10.6, action: "reveal", target: "num", dur: 0.6 },
-        { at: 11.799999999999999, action: "reveal", target: "b", dur: 0.5 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "实测：16 个 compute pass 让 GPU" },
+        { at: 7.752173913043478, action: "reveal", target: "l", dur: 0.7 },
+        { at: 8.1, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 8.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 8.4, action: "speak", text: "[ ] 别用 performance.now() 判" },
+        { at: 14.804347826086957, action: "reveal", target: "c", dur: 0.4 },
+        { at: 14.904347826086957, action: "draw", target: "c", dur: 3.4 },
+        { at: 18.1, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 18.1, action: "dim", target: "l", dur: 0.5 },
+        { at: 18.4, action: "speak", text: "看右图：16个 对 1.01" },
+        { at: 22.247826086956525, action: "reveal", target: "num", dur: 0.6 },
+        { at: 22.5, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 22.5, action: "dim", target: "c", dur: 0.5 },
+        { at: 22.8, action: "speak", text: "量级：16个、1.5ms、12.3ms、0.070m" },
+        { at: 29.300000000000008, action: "reveal", target: "b", dur: 0.5 },
+        { at: 29.6, action: "spotlight", target: "b", dur: 0.5 },
+        { at: 29.6, action: "dim", target: "num", dur: 0.5 },
+        { at: 29.9, action: "speak", text: "边界：[ ] 别用 performance.now(" }
       ],
     },
     {
       id: 'b-每帧的-cpu-侧-最容易拿到大倍数的地',
       title: 'B. 每帧的 CPU 侧（最容易拿到大倍数的地方）',
-      duration: 24,
+      duration: 40,
+      beat: 'boundary',
       elements: [
         {
           id: "k",
@@ -337,18 +366,32 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "实测 20000 个/帧 = 24.4ms（1.2µs 一个）→ 缓存后 3.9ms" },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "reveal", target: "c", dur: 0.4 },
-        { at: 6.1, action: "draw", target: "c", dur: 4 },
-        { at: 10.6, action: "reveal", target: "num", dur: 0.6 },
-        { at: 11.799999999999999, action: "reveal", target: "b", dur: 0.5 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "实测 20000 个/帧 = 24.4ms（1.2µ" },
+        { at: 7.752173913043478, action: "reveal", target: "l", dur: 0.7 },
+        { at: 8.1, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 8.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 8.4, action: "speak", text: "[ ] 缓存 bind group，绝不每帧 cre" },
+        { at: 14.804347826086957, action: "reveal", target: "c", dur: 0.4 },
+        { at: 14.904347826086957, action: "draw", target: "c", dur: 3.4 },
+        { at: 18.1, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 18.1, action: "dim", target: "l", dur: 0.5 },
+        { at: 18.4, action: "speak", text: "看右图：20000个 对 20000" },
+        { at: 23.11739130434783, action: "reveal", target: "num", dur: 0.6 },
+        { at: 23.4, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 23.4, action: "dim", target: "c", dur: 0.5 },
+        { at: 23.7, action: "speak", text: "量级：20000个、24.4ms、1.2µs、3.9" },
+        { at: 30.169565217391312, action: "reveal", target: "b", dur: 0.5 },
+        { at: 30.5, action: "spotlight", target: "b", dur: 0.5 },
+        { at: 30.5, action: "dim", target: "num", dur: 0.5 },
+        { at: 30.8, action: "speak", text: "边界：注意 minUniformBufferOffs" }
       ],
     },
     {
       id: 'c-gpu-侧-带宽',
       title: 'C. GPU 侧 / 带宽',
-      duration: 24,
+      duration: 39,
+      beat: 'boundary',
       elements: [
         {
           id: "k",
@@ -449,18 +492,32 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "实测 8 个全屏 pass 链：load+store 比 clear+discard" },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "reveal", target: "c", dur: 0.4 },
-        { at: 6.1, action: "draw", target: "c", dur: 4 },
-        { at: 10.6, action: "reveal", target: "num", dur: 0.6 },
-        { at: 11.799999999999999, action: "reveal", target: "b", dur: 0.5 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "实测 8 个全屏 pass 链：load+store" },
+        { at: 7.752173913043478, action: "reveal", target: "l", dur: 0.7 },
+        { at: 8.1, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 8.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 8.4, action: "speak", text: "[ ] 能 storeOp:'discard' 就 " },
+        { at: 14.804347826086957, action: "reveal", target: "c", dur: 0.4 },
+        { at: 14.904347826086957, action: "draw", target: "c", dur: 3.4 },
+        { at: 18.1, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 18.1, action: "dim", target: "l", dur: 0.5 },
+        { at: 18.4, action: "speak", text: "看右图：8个 对 4.02" },
+        { at: 22.030434782608697, action: "reveal", target: "num", dur: 0.6 },
+        { at: 22.3, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 22.3, action: "dim", target: "c", dur: 0.5 },
+        { at: 22.6, action: "speak", text: "量级：8个、20、35%、4.73、4.78、4.0" },
+        { at: 29.08260869565218, action: "reveal", target: "b", dur: 0.5 },
+        { at: 29.4, action: "spotlight", target: "b", dur: 0.5 },
+        { at: 29.4, action: "dim", target: "num", dur: 0.5 },
+        { at: 29.7, action: "speak", text: "边界：[ ] MSAA 不要凭直觉拒绝。 本机 TB" }
       ],
     },
     {
       id: 'd-能力面-兼容性',
       title: 'D. 能力面 / 兼容性',
-      duration: 24,
+      duration: 39,
+      beat: 'boundary',
       elements: [
         {
           id: "k",
@@ -561,18 +618,32 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "本机默认 maxStorageBufferBindingSize 128MiB vs" },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "reveal", target: "c", dur: 0.4 },
-        { at: 6.1, action: "draw", target: "c", dur: 4 },
-        { at: 10.6, action: "reveal", target: "num", dur: 0.6 },
-        { at: 11.799999999999999, action: "reveal", target: "b", dur: 0.5 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "本机默认 maxStorageBufferBindi" },
+        { at: 7.752173913043478, action: "reveal", target: "l", dur: 0.7 },
+        { at: 8.1, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 8.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 8.4, action: "speak", text: "[ ] requestDevice({ requir" },
+        { at: 14.804347826086957, action: "reveal", target: "c", dur: 0.4 },
+        { at: 14.904347826086957, action: "draw", target: "c", dur: 3.4 },
+        { at: 18.1, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 18.1, action: "dim", target: "l", dur: 0.5 },
+        { at: 18.4, action: "speak", text: "看右图：128MiB 对 16" },
+        { at: 22.46521739130435, action: "reveal", target: "num", dur: 0.6 },
+        { at: 22.8, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 22.8, action: "dim", target: "c", dur: 0.5 },
+        { at: 23.1, action: "speak", text: "量级：128MiB、4GiB、32、256、1024" },
+        { at: 29.51739130434783, action: "reveal", target: "b", dur: 0.5 },
+        { at: 29.8, action: "spotlight", target: "b", dur: 0.5 },
+        { at: 29.8, action: "dim", target: "num", dur: 0.5 },
+        { at: 30.1, action: "speak", text: "边界：限制大幅下调（maxTextureDimens" }
       ],
     },
     {
       id: 'e-把计算搬到-gpu-的判据',
       title: 'E. 把计算搬到 GPU 的判据',
-      duration: 23,
+      duration: 38,
+      beat: 'boundary',
       elements: [
         {
           id: "k",
@@ -673,18 +744,32 @@ export const deck = {
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
         { at: 0.9, action: "reveal", target: "claim", dur: 0.5 },
-        { at: 1.2, action: "speak", text: "实测：JS 粒子模拟本身只要 ~3.5 ns/粒子；2M 粒子 7.4ms，" },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "reveal", target: "c", dur: 0.4 },
-        { at: 6.1, action: "draw", target: "c", dur: 4 },
-        { at: 10.6, action: "reveal", target: "num", dur: 0.6 },
-        { at: 11.799999999999999, action: "reveal", target: "b", dur: 0.5 }
+        { at: 1, action: "spotlight", target: "claim", dur: 0.5 },
+        { at: 1.3, action: "speak", text: "实测：JS 粒子模拟本身只要 ~3.5 ns/粒子；" },
+        { at: 7.752173913043478, action: "reveal", target: "l", dur: 0.7 },
+        { at: 8.1, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 8.1, action: "dim", target: "claim", dur: 0.5 },
+        { at: 8.4, action: "speak", text: "[ ] 先问\"数据要不要每帧过总线\"。" },
+        { at: 13.282608695652176, action: "reveal", target: "c", dur: 0.4 },
+        { at: 13.382608695652175, action: "draw", target: "c", dur: 3.4 },
+        { at: 16.6, action: "spotlight", target: "c", dur: 0.5 },
+        { at: 16.6, action: "dim", target: "l", dur: 0.5 },
+        { at: 16.9, action: "speak", text: "看右图：3.5ns 对 0.781ms" },
+        { at: 21.813043478260873, action: "reveal", target: "num", dur: 0.6 },
+        { at: 22.1, action: "spotlight", target: "num", dur: 0.5 },
+        { at: 22.1, action: "dim", target: "c", dur: 0.5 },
+        { at: 22.4, action: "speak", text: "量级：3.5ns、2、7.4ms、64MiB、0.8" },
+        { at: 28.865217391304352, action: "reveal", target: "b", dur: 0.5 },
+        { at: 29.2, action: "spotlight", target: "b", dur: 0.5 },
+        { at: 29.2, action: "dim", target: "num", dur: 0.5 },
+        { at: 29.5, action: "speak", text: "边界：[ ] 先问\"数据要不要每帧过总线\"。" }
       ],
     },
     {
       id: 'f-提交前自检',
       title: 'F. 提交前自检',
-      duration: 14,
+      duration: 21,
+      beat: 'payoff',
       elements: [
         {
           id: "k",
@@ -739,8 +824,17 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: "reveal", target: ["k", "t"], dur: 0.5 },
-        { at: 4.2, action: "reveal", target: "l", dur: 0.7 },
-        { at: 6, action: "countUp", target: "m", dur: 1.6 }
+        { at: 0.6, action: "spotlight", target: "t", dur: 0.5 },
+        { at: 0.9, action: "speak", text: "F. 提交前自检" },
+        { at: 3.4391304347826086, action: "reveal", target: "l", dur: 0.7 },
+        { at: 3.7, action: "spotlight", target: "l", dur: 0.5 },
+        { at: 3.7, action: "dim", target: "t", dur: 0.5 },
+        { at: 4, action: "speak", text: "[ ] 有没有 createBindGroup / " },
+        { at: 10.491304347826087, action: "countUp", target: "m", dur: 1.6 },
+        { at: 12, action: "spotlight", target: "m", dur: 0.5 },
+        { at: 12, action: "dim", target: "l", dur: 0.5 },
+        { at: 12.3, action: "speak", text: "量级：1" },
+        { at: 16.5, action: "hold", dur: 3.4 }
       ],
     },
   ],

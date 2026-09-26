@@ -4,33 +4,43 @@
  * 数字全部来自 ~/Projects/webgpu 的实测（20000 个物体，canonical-full-suite.json）。
  */
 export const deck = {
-  meta: { title: '每帧重建 bind group 的代价', theme: 'neon' },
+  meta: { title: '每帧重建 bind group 的代价', theme: 'neon',
+    oneLine: '绑定组的开销在创建不在绑定，所以缓存绑定组能拿到十倍量级的提升。',},
   scenes: [
     {
       id: 'hook',
       title: '一次 createBindGroup 值多少钱',
       duration: 18,
+
+      beat: 'hook',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: 'WEBGPU · 绑定与状态', x: 8, y: 12, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '每帧重建 20000 个<br>bind group', x: 8, y: 20, w: 62, size: 44 },
         { id: 'm1', group: 'row', type: 'metric', value: 0, unit: 'ms', label: '每帧重建 · CPU', tone: 'bad', x: 8, y: 56, w: 26, decimals: 2 },
         { id: 'm2', group: 'row', type: 'metric', value: 0, unit: 'ms', label: '缓存后 · CPU', tone: 'good', x: 40, y: 56, w: 26, decimals: 2 },
         { id: 'm3', group: 'row', type: 'metric', value: 0, unit: 'µs', label: '单个 bind group', x: 72, y: 56, w: 22, decimals: 1 },
-        { id: 's', type: 'text', role: 'body', text: '实测：一次 createBindGroup ≈ 1.2µs。<br>乘上两万次，就是 24 毫秒 —— 一帧的预算只有 16 毫秒。', x: 8, y: 78, w: 62 },
+        { id: 's', type: 'text', role: 'body', text: '实测：一次 createBindGroup ≈ 1.2µs。<br>乘上两万次是多少？一帧的预算只有 16 毫秒。', x: 8, y: 78, w: 62 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
-        { at: 0.8, action: 'reveal', target: ['m1', 'm2', 'm3'], dur: 0.5 },
-        { at: 1.0, action: 'countUp', target: 'm1', from: 0, to: 24.36, dur: 1.6 },
-        { at: 2.8, action: 'countUp', target: 'm2', from: 0, to: 2.04, dur: 1.2, ease: 'out' },
-        { at: 4.2, action: 'countUp', target: 'm3', from: 0, to: 1.2, dur: 1.0 },
-        { at: 5.6, action: 'reveal', target: 's', dur: 0.6 },
-        { at: 6.6, action: 'spotlight', target: 'm1', dur: 0.5 },
-        { at: 0.6, action: 'speak', text: '先猜：一帧里创建两万个绑定对象，要花多少时间？' },
-        { at: 6.4, action: 'speak', text: '二十四毫秒。而一帧的预算是十六毫秒 —— 光是建绑定对象就超了。' },
-        { at: 10.4, action: 'speak', text: '缓存之后是两点零四毫秒。差十二倍。' },
+        // 提问之前只给**单价**（m3），不给总数 —— 总数就是答案。
+        { at: 0.8, action: 'reveal', target: 'm3', dur: 0.5 },
+        { at: 1.0, action: 'countUp', target: 'm3', from: 0, to: 1.2, dur: 1.0 },
+        { at: 2.4, action: 'reveal', target: 's', dur: 0.6 },
+        { at: 0.6, action: 'speak', text: '先给单价：一次 createBindGroup 大约一点二微秒。' },
+        { at: 3.0, action: 'speak', text: '一帧要建两万个。乘起来是多少？一帧预算只有十六毫秒。' },
+        // ↓ 答案在题之后
+        { at: 8.6, action: 'reveal', target: ['m1', 'm2'], dur: 0.5 },
+        { at: 8.8, action: 'countUp', target: 'm1', from: 0, to: 24.36, dur: 1.6 },
+        { at: 10.8, action: 'countUp', target: 'm2', from: 0, to: 2.04, dur: 1.2, ease: 'out' },
+        { at: 8.8, action: 'spotlight', target: 'm1', dur: 0.5 },
+        { at: 8.8, action: 'dim', target: 'm3', dur: 0.5 },
+        { at: 11.0, action: 'speak', text: '二十四毫秒，光是建绑定对象就超了一帧预算。' },
+        { at: 13.4, action: 'speak', text: '缓存之后是两点零四毫秒 —— 差十二倍。' },
       ],
       quiz: {
+        at: 8.0,
         q: '一个 createBindGroup 大约 1.2 微秒。那 20000 个呢？',
         opts: [
           { t: '约 0.024 毫秒（1.2µs × 20000 太少，可忽略）', ok: false, why: '算错了：1.2µs × 20000 = 24000µs = 24ms，不是 0.024ms。' },
@@ -43,6 +53,9 @@ export const deck = {
       id: 'strategies',
       title: '三种缓存策略',
       duration: 18,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 't', group: 'head', type: 'text', role: 'title', text: '从 24ms 到 2ms 的三步', x: 6, y: 6, w: 60, size: 30 },
         { id: 'ch', group: 'chart', type: 'chart', x: 6, y: 20, w: 42, h: 54,
@@ -76,6 +89,9 @@ export const deck = {
       id: 'boundary',
       title: '什么时候不值得',
       duration: 16,
+
+      beat: 'boundary',
+
       elements: [
         { id: 't', group: 'head', type: 'text', role: 'title', text: '别为了 0.3ms 重构', x: 8, y: 10, w: 60, size: 32 },
         { id: 'l', group: 'list', type: 'list', x: 8, y: 28, w: 80, items: [

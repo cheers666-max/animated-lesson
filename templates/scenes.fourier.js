@@ -11,13 +11,17 @@
  *   · 测不准：高斯窗 σ_t · σ_ω = 1.0000（四组 σ 全部精确等于 1）
  */
 export const deck = {
-  meta: { title: '傅立叶变换：为什么任何信号都是一堆正弦', theme: 'ink' },
+  meta: { title: '傅立叶变换：为什么任何信号都是一堆正弦', theme: 'ink',
+    oneLine: '任何信号都是一堆正弦叠出来的，而收敛速度和吉布斯尖峰决定了它在工程上怎么用。',},
   scenes: [
     // ---------------------------------------------------------------- 01 主张
     {
       id: 'claim',
       title: '任何信号都是一堆正弦叠出来的',
       duration: 34,
+
+      beat: 'hook',
+
       elements: [
         { id: 'pt', type: 'image', src: './assets/fourier.jpg', fit: 'cover', bleed: true,
           x: 76, y: 0, w: 24, h: 100, ken: 0.10, z: 0,
@@ -91,13 +95,20 @@ export const deck = {
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
         { at: 0.6, action: 'reveal', target: ['pt', 'ca'], dur: 0.6 },
-        { at: 0.8, action: 'draw', target: 'pt', dur: 30 },
-        { at: 18.0, action: 'reveal', target: ['m1', 'm2', 'm3'], dur: 0.5 },
-        { at: 18.4, action: 'countUp', target: 'm1', from: 0, to: 20.31, dur: 1.0 },
-        { at: 19.6, action: 'countUp', target: 'm2', from: 0, to: 6.76, dur: 1.0 },
-        { at: 20.8, action: 'countUp', target: 'm3', from: 0, to: 0.80, dur: 1.0 },
-        { at: 22.4, action: 'reveal', target: 'bt', dur: 0.6 },
-        { at: 24.0, action: 'spotlight', target: 'm1', dur: 0.6 },
+        // 分三段画，段间插 hold —— 一口气画 28 秒，观众拿不到任何中间态
+        // （G15 段长门禁会拦；这正是 transient information effect 说的病）
+        { at: 0.8, action: 'draw', target: 'pt', from: 0, to: 0.33, dur: 6 },
+        { at: 6.9, action: 'hold', dur: 2.0 },
+        { at: 9.0, action: 'draw', target: 'pt', from: 0.33, to: 0.66, dur: 6 },
+        { at: 15.1, action: 'hold', dur: 2.0 },
+        { at: 17.2, action: 'draw', target: 'pt', from: 0.66, to: 1, dur: 5 },
+        { at: 22.3, action: 'hold', dur: 2.0 },
+        { at: 24.5, action: 'reveal', target: ['m1', 'm2', 'm3'], dur: 0.5 },
+        { at: 24.9, action: 'countUp', target: 'm1', from: 0, to: 20.31, dur: 1.0 },
+        { at: 26.1, action: 'countUp', target: 'm2', from: 0, to: 6.76, dur: 1.0 },
+        { at: 27.3, action: 'countUp', target: 'm3', from: 0, to: 0.80, dur: 1.0 },
+        { at: 28.5, action: 'reveal', target: 'bt', dur: 0.6 },
+        { at: 30.1, action: 'spotlight', target: 'm1', dur: 0.6 },
         { at: 0.8, action: 'speak', text: '先猜一件事：方波能不能用正弦拼出来？' },
         { at: 6.5, action: 'speak', text: '能。而且只要奇数次的谐波，振幅按四除以πk 递减。' },
         { at: 13.5, action: 'speak', text: '加到第二十一次，形状已经很方了。但它永远只是"接近"。' },
@@ -119,6 +130,9 @@ export const deck = {
       id: 'mech',
       title: '怎么求每一项的系数',
       duration: 37,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '傅立叶 · 机制', x: 5, y: 6, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '系数不是"猜"出来的 —— 是把信号投影到每个频率上', x: 5, y: 11, w: 84, size: 30 },
@@ -185,8 +199,11 @@ export const deck = {
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
         { at: 0.6, action: 'reveal', target: 'ca', dur: 0.6 },
+        { at: 0.6, action: 'spotlight', target: 'ca', dur: 0.5 },   // G16 焦点：知道了"能拆"，下一个问题是：每一项的系数怎…
         { at: 20.0, action: 'reveal', target: 'l', dur: 0.6 },
         { at: 23.0, action: 'reveal', target: 'bd', dur: 0.6 },
+        { at: 23.8, action: 'dim', target: 'ca', dur: 0.5 },
+        { at: 23.8, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：所以系数是投影出来的，不是猜出来的。…
         { at: 25.0, action: 'pause', hint: '如果窗口长度取错，系数会怎样？' },
         { at: 0.8, action: 'speak', text: '知道了"能拆"，下一个问题是：每一项的系数怎么求？' },
         { at: 6.0, action: 'speak', text: '做法是拿一个同频率的正弦当探针，和信号相乘再积分。' },
@@ -202,6 +219,9 @@ export const deck = {
       id: 'scale',
       title: '要几项才够',
       duration: 26,
+
+      beat: 'evidence',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '傅立叶 · 量级', x: 5, y: 6, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '误差随项数怎么降', x: 5, y: 11, w: 60, size: 34 },
@@ -220,14 +240,21 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
+        { at: 0.6, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：这张图是数值算出来的，不是示意。…
         { at: 0.7, action: 'reveal', target: 'c', dur: 0.8, ease: 'out' },
         { at: 2.0, action: 'grow', target: 'c', dur: 2.2 },
+        { at: 4.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 4.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：系数按 k 分之一衰减，误差大致按根号 N …
         { at: 5.5, action: 'reveal', target: 'l', dur: 0.6 },
+        { at: 11.3, action: 'dim', target: 'l', dur: 0.5 },
+        { at: 11.3, action: 'spotlight', target: 'bt', dur: 0.5 },   // G16 焦点：换句话说：想把误差再降十倍，项数要再多一百倍…
         { at: 12.0, action: 'reveal', target: 'bt', dur: 0.6 },
         { at: 17.0, action: 'reveal', target: 'bd', dur: 0.6 },
         { at: 0.8, action: 'speak', text: '这张图是数值算出来的，不是示意。' },
         { at: 5.0, action: 'speak', text: '系数按 k 分之一衰减，误差大致按根号 N 分之一降。' },
         { at: 11.5, action: 'speak', text: '换句话说：想把误差再降十倍，项数要再多一百倍左右。' },
+        { at: 17.3, action: 'dim', target: 'bt', dur: 0.5 },
+        { at: 17.3, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：这时候你可能会想，那干脆多加项不就行了。跳变…
         { at: 17.5, action: 'speak', text: '这时候你可能会想，那干脆多加项不就行了。跳变处不行。' },
       ],
     },
@@ -237,6 +264,9 @@ export const deck = {
       id: 'limit',
       title: '吉布斯：加项数解决不了的那个尖峰',
       duration: 34,
+
+      beat: 'boundary',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '傅立叶 · 边界', x: 5, y: 6, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '加项数解决不了的那个尖峰', x: 5, y: 11, w: 72, size: 32 },
@@ -280,13 +310,18 @@ export const deck = {
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
         { at: 0.6, action: 'reveal', target: 'ca', dur: 0.6 },
+        { at: 0.6, action: 'spotlight', target: 'ca', dur: 0.5 },   // G16 焦点：现在看边界。这是方波跳变处的放大。…
         { at: 14.0, action: 'reveal', target: 'l', dur: 0.7 },
+        { at: 20.8, action: 'dim', target: 'ca', dur: 0.5 },
+        { at: 20.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：第二个边界更要紧：全局傅立叶只告诉你有哪些频…
         { at: 22.0, action: 'reveal', target: 'bt', dur: 0.6 },
         { at: 24.5, action: 'pause', hint: '为什么"频率"和"时间"不能同时说准？' },
         { at: 0.8, action: 'speak', text: '现在看边界。这是方波跳变处的放大。' },
         { at: 6.0, action: 'speak', text: '亮线是九项，淡线是九百九十九项。它们在这个位置的尖峰一样高。' },
         { at: 13.0, action: 'speak', text: '多出来的项只把尖峰削窄，不把它压低。这个超调永远是跳变幅度的百分之八点九四九。' },
         { at: 21.0, action: 'speak', text: '第二个边界更要紧：全局傅立叶只告诉你有哪些频率，不告诉你它们什么时候出现。' },
+        { at: 26.3, action: 'dim', target: 'l', dur: 0.5 },
+        { at: 26.3, action: 'spotlight', target: 'bt', dur: 0.5 },   // G16 焦点：第三，时间和频率不能同时说准：高斯窗的乘积恒…
         { at: 26.5, action: 'speak', text: '第三，时间和频率不能同时说准：高斯窗的乘积恒等于一。' },
       ],
       quiz: {
@@ -304,6 +339,9 @@ export const deck = {
       id: 'use',
       title: '所以工程上怎么用',
       duration: 29,
+
+      beat: 'payoff',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '傅立叶 · 推论', x: 5, y: 6, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '知道了边界，就知道该选哪个工具', x: 5, y: 11, w: 72, size: 32 },
@@ -329,15 +367,22 @@ for (let i = 0; i + W <= n; i += hop)
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
+        { at: 0.6, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：所以工程上的选择很清楚。…
         { at: 0.7, action: 'reveal', target: 'c', dur: 0.6 },
         { at: 2.2, action: 'reveal', target: 'l', dur: 0.9, ease: 'out' },
+        { at: 3.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 3.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：只关心有哪些频率，用全局 FFT 就够。…
         { at: 15.0, action: 'reveal', target: 'bt', dur: 0.6 },
+        { at: 18.8, action: 'dim', target: 'l', dur: 0.5 },
+        { at: 18.8, action: 'spotlight', target: 'bt', dur: 0.5 },   // G16 焦点：这三个都不是谁更好，只是把同一个测不准换成不…
         { at: 22.5, action: 'reveal', target: 'bd', dur: 0.6 },
         { at: 0.8, action: 'speak', text: '所以工程上的选择很清楚。' },
         { at: 4.0, action: 'speak', text: '只关心有哪些频率，用全局 FFT 就够。' },
         { at: 9.0, action: 'speak', text: '还想知道什么时候出现，就得开窗 —— 这是 STFT。' },
         { at: 14.0, action: 'speak', text: '频率跨度大，就用小波：窗宽本身随频率变。' },
         { at: 19.0, action: 'speak', text: '这三个都不是谁更好，只是把同一个测不准换成不同的取舍点。' },
+        { at: 24.3, action: 'dim', target: 'bt', dur: 0.5 },
+        { at: 24.3, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：窗宽就是那个旋钮。…
         { at: 24.5, action: 'speak', text: '窗宽就是那个旋钮。' },
       ],
     },

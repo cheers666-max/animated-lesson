@@ -142,13 +142,17 @@ const hex2rgb = (hex) => {
 
 // ================================================================= 课件
 export const deck = {
-  meta: { title: '按笔画出来的东西', subtitle: '为什么有些知识只能逐笔讲', theme: 'ink' },
+  meta: { title: '按笔画出来的东西', subtitle: '为什么有些知识只能逐笔讲', theme: 'ink',
+    oneLine: '「按笔画出来」把构造顺序本身变成知识，代价是每笔都必须停得住。',},
   scenes: [
     // ---------------------------------------------------------- 01 立论
     {
       id: 'thesis',
       title: '同一张图，两种给法',
       duration: 16,
+
+      beat: 'hook',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '讲解模式 · 立论', x: 8, y: 8, w: 50 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '同一张图，两种给法', x: 8, y: 13, w: 70, size: 40 },
@@ -164,12 +168,15 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'fa', dur: 0.5 },   // G16 焦点：这是同一张图。左边一次给完，右边一笔一笔画。…
         { at: 0.9, action: 'reveal', target: ['la', 'fa'], dur: 0.4 },
         { at: 1.0, action: 'draw', target: 'fa', dur: 0.02 },     // 瞬间：4 笔一起出现
         { at: 1.4, action: 'reveal', target: ['lb', 'fb'], dur: 0.4 },
         { at: 1.5, action: 'draw', target: 'fb', dur: 8 },        // 逐笔：8 秒画完同样 4 笔
         { at: 9.8, action: 'reveal', target: 'note', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '这是同一张图。左边一次给完，右边一笔一笔画。' },
+        { at: 10, action: 'dim', target: 'fa', dur: 0.5 },
+        { at: 10, action: 'spotlight', target: 'note', dur: 0.5 },   // G16 焦点：像素完全一样，区别只有信息到达的节奏。…
         { at: 10.2, action: 'speak', text: '像素完全一样，区别只有信息到达的节奏。' },
       ],
       quiz: {
@@ -187,6 +194,9 @@ export const deck = {
       id: 'casteljau',
       title: '贝塞尔曲线是怎么被画出来的',
       duration: 26,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: 'CASE 1 · 构造过程就是知识', x: 4, y: 4, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '曲线不是画出来的，是构造出来的', x: 4, y: 9, w: 62, size: 30 },
@@ -201,15 +211,22 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.6, action: 'spotlight', target: 'l1', dur: 0.5 },   // G16 焦点：先画控制多边形。三个线段，一笔一笔来。…
         { at: 0.8, action: 'reveal', target: 'c', dur: 0.5 },
         { at: 1.0, action: 'reveal', target: 'l1', dur: 0.5 },
         { at: 4.2, action: 'reveal', target: 'l2', dur: 0.5 },
+        { at: 5, action: 'dim', target: 'l1', dur: 0.5 },
+        { at: 5, action: 'spotlight', target: 'l2', dur: 0.5 },   // G16 焦点：然后在每条线段上按同一个比例取点，得到第一层…
         { at: 7.8, action: 'reveal', target: 'l3', dur: 0.5 },
         { at: 9.2, action: 'reveal', target: 'l4', dur: 0.5 },
+        { at: 10.4, action: 'dim', target: 'l2', dur: 0.5 },
+        { at: 10.4, action: 'spotlight', target: 'l4', dur: 0.5 },   // G16 焦点：同样的规则再来两层，只剩一个点。…
         { at: 11.4, action: 'reveal', target: 'l5', dur: 0.5 },
         { at: 0.8, action: 'speak', text: '先画控制多边形。三个线段，一笔一笔来。' },
         { at: 5.2, action: 'speak', text: '然后在每条线段上按同一个比例取点，得到第一层。' },
         { at: 10.6, action: 'speak', text: '同样的规则再来两层，只剩一个点。' },
+        { at: 14.4, action: 'dim', target: 'l4', dur: 0.5 },
+        { at: 14.4, action: 'spotlight', target: 'l5', dur: 0.5 },   // G16 焦点：让比例从零走到一，这个点扫过的轨迹，就是贝塞…
         { at: 14.6, action: 'speak', text: '让比例从零走到一，这个点扫过的轨迹，就是贝塞尔曲线本身。' },
         { at: 21.6, action: 'speak', text: '所以曲线不是被画出来的，是被构造出来的。' },
       ],
@@ -228,7 +245,8 @@ export const deck = {
       id: 'astar',
       title: 'A* 为什么走这条路',
       duration: 20,
-      elements: [
+beat: 'mechanism',
+elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: 'CASE 2 · 顺序就是知识', x: 4, y: 4, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '它是被终点"吸"过去的', x: 4, y: 9, w: 60, size: 30 },
 
@@ -245,15 +263,20 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：从起点开始，每次展开代价加启发式最小的格子。…
         { at: 0.8, action: 'reveal', target: 'c', dur: 0.5 },
         { at: 1.2, action: 'reveal', target: 'cap', dur: 0.5 },
         { at: 3.0, action: 'reveal', target: 'l', dur: 0.6 },
         { at: 5.0, action: 'reveal', target: 'm1', dur: 0.5 },
         { at: 5.2, action: 'countUp', target: 'm1', from: 0, to: SEARCH.order.length, dur: 6, ease: 'linear' },
+        { at: 6.2, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 6.2, action: 'spotlight', target: 'm1', dur: 0.5 },   // G16 焦点：注意顺序：它不是一圈圈均匀扩散，而是被终点吸…
         { at: 12.6, action: 'reveal', target: 'm2', dur: 0.5 },
         { at: 13.0, action: 'countUp', target: 'm2', from: 0, to: SEARCH.path.length - 1, dur: 1.6 },
         { at: 0.6, action: 'speak', text: '从起点开始，每次展开代价加启发式最小的格子。' },
         { at: 6.4, action: 'speak', text: '注意顺序：它不是一圈圈均匀扩散，而是被终点吸过去。' },
+        { at: 13.2, action: 'dim', target: 'm1', dur: 0.5 },
+        { at: 13.2, action: 'spotlight', target: 'm2', dur: 0.5 },   // G16 焦点：找到终点后回溯，路径逐笔画出。…
         { at: 13.4, action: 'speak', text: '找到终点后回溯，路径逐笔画出。' },
         { at: 17.0, action: 'speak', text: '静态图只能给你最后那条线。' },
       ],
@@ -264,6 +287,9 @@ export const deck = {
       id: 'sdf',
       title: '一个 float 里的字形',
       duration: 18,
+
+      beat: 'evidence',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: 'CASE 3 · 数学 → 字形', x: 6, y: 5, w: 56 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '笔画是从距离场里"浮"出来的', x: 6, y: 10, w: 56, size: 30 },
@@ -279,8 +305,14 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：这是字母 A 的距离场：每个像素记录它到最近…
         { at: 0.8, action: 'reveal', target: 'c', dur: 0.5 },
-        { at: 1.0, action: 'grow', target: 'c', from: 0, to: 1, dur: 12, ease: 'linear' },
+        // 等值线分层收进来 —— 分三段，段间停住让人看清「收到这一层长什么样」
+        { at: 1.0, action: 'grow', target: 'c', from: 0, to: 0.34, dur: 4, ease: 'linear' },
+        { at: 5.2, action: 'hold', dur: 1.5 },
+        { at: 6.8, action: 'grow', target: 'c', from: 0.34, to: 0.67, dur: 4, ease: 'linear' },
+        { at: 11.0, action: 'hold', dur: 1.5 },
+        { at: 12.6, action: 'grow', target: 'c', from: 0.67, to: 1, dur: 4, ease: 'linear' },
         { at: 13.6, action: 'reveal', target: 'l', dur: 0.6 },
         { at: 15.0, action: 'reveal', target: 'note', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '这是字母 A 的距离场：每个像素记录它到最近笔画有多远。' },
@@ -294,6 +326,9 @@ export const deck = {
       id: 'boundary',
       title: '什么时候不该逐笔',
       duration: 18,
+
+      beat: 'boundary',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '模式的边界', x: 6, y: 5, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '逐笔不是万能药', x: 6, y: 10, w: 60, size: 30 },
@@ -312,11 +347,14 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.5 },
+        { at: 0.4, action: 'spotlight', target: 'ca', dur: 0.5 },   // G16 焦点：反过来看：这四根柱子的关系是并列的，没有先后…
         { at: 0.9, action: 'reveal', target: ['la', 'ca'], dur: 0.4 },
         { at: 1.0, action: 'draw', target: 'ca', dur: 5 },
         { at: 6.6, action: 'reveal', target: ['lb', 'cb'], dur: 0.4 },
         { at: 6.7, action: 'draw', target: 'cb', dur: 0.05 },       // 并列数据：瞬间给完
         { at: 7.6, action: 'reveal', target: 'l', dur: 0.7 },
+        { at: 10.6, action: 'dim', target: 'ca', dur: 0.5 },
+        { at: 10.6, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：判据很简单：信息里有顺序就逐笔，只是并列就一…
         { at: 12.4, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '反过来看：这四根柱子的关系是并列的，没有先后。' },
         { at: 6.0, action: 'speak', text: '一次给完就够了，逐笔反而浪费观众的时间。' },

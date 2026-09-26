@@ -55,11 +55,17 @@ export const ACTIONS = {
   // 数据长大
   countUp: (s, p, b) => { s.value = (b.from ?? 0) + ((b.to ?? 0) - (b.from ?? 0)) * p; },
   // 逐笔画出（shape / annot）
-  draw: (s, p) => { s.p = p; },
+  // draw 支持子区间：{ from, to } 让多段 draw 接力推进同一个 p
+  // （不然第二段会把 p 从 0 重来，第一段白画）
+  draw: (s, p, b) => { s.p = (b.from ?? 0) + ((b.to ?? 1) - (b.from ?? 0)) * p; },
   // 布局推进（柱状图/进度条用）
   grow: (s, p, b) => { s.grow = (b.from ?? 0) + ((b.to ?? 1) - (b.from ?? 0)) * p; },
   // 空动作：只提供时间点（配合 speak 做节奏控制）
   wait: () => {},
+  // 声明「从 at 起 dur 秒内画面全静态、观众可以重读」。
+  // 空实现是**故意的**：它不产生任何动画，只产生一个能被 G15 验证的**声明**。
+  // 声明了却在动 = 说谎，G15 报错。这是段长门禁能从「建议」变成「断言」的关键。
+  hold: () => {},
 };
 
 /** reveal 的 stagger 由 deck 展开成多个 reveal，不单独实现。 */
@@ -67,6 +73,14 @@ export const ACTIONS = {
 // ---------------------------------------------------------------- 校验器（与运行时同源）
 const KNOWN_TYPES = ['text', 'shape', 'code', 'metric', 'list', 'chart', 'canvas2d', 'three', 'annot', 'image'];
 const KNOWN_ACTIONS = Object.keys(ACTIONS).concat(['stagger', 'speak', 'zoomTo', 'reset', 'pause']);
+const HOLD_MIN = 1.2;   // 可重读的最短静态窗口（秒）
+
+// 叙事节拍（来自 iart-ai/explainer-video-skills 的叙事弧 + 本 skill 的 A 轨）
+// 每一幕必须声明它服务哪个节拍 —— 这样一份课件的**论证结构**是自描述的，
+// 而不是靠读者自己猜。见 references/landscape.md §3.3。
+const NARRATIVE_BEATS = ['hook', 'problem', 'mechanism', 'evidence', 'boundary', 'payoff'];
+const BEAT_MIN_SHARE = 8;    // 单个节拍最少占多少百分比时长（低于此 = 装饰性收尾）
+const BEAT_MAX_SHARE = 50;   // 单个节拍最多占多少（高于此 = 头重脚轻）
 const CHARS_PER_SEC = 4.6;      // 中文讲解语速（字/秒），用于时长预算
 const SCENE_CAP = 60;           // 单场景硬上限（秒）
 const ELEMENT_CAP = 14;         // 单场景元素上限（超了说明该拆页）
@@ -83,6 +97,13 @@ export function validate(spec) {
 
   if (!spec || typeof spec !== 'object') return { ok: false, errors: ['spec 不是对象'], warnings };
   if (!spec.meta?.title) W('meta.title 缺失（导出/文件名会不好认）');
+  // 「一句话」是整份课件的脊梁 —— iart 的说法：一句话说不清就是没有脊梁，
+  // 该砍范围而不是缩小字号。所以必填，且不许写成两句话。
+  if (!spec.meta?.oneLine) {
+    E('meta.oneLine 缺失 —— 用**一句话**说出看完这堂课该记住的那件事（说不清就该砍范围）');
+  } else if (String(spec.meta.oneLine).length > 60) {
+    W(`meta.oneLine 有 ${String(spec.meta.oneLine).length} 字 —— 超过 60 字通常意味着不止一个主张`);
+  }
   if (!Array.isArray(spec.scenes) || !spec.scenes.length) { E('scenes 为空'); return { ok: false, errors, warnings }; }
 
   const sceneIds = new Set();
@@ -155,6 +176,9 @@ export function validate(spec) {
       if (dur && b.at > dur) E(`${bAt}: at=${b.at}s 超过场景时长 ${dur}s（永远播不到）`);
       if (!KNOWN_ACTIONS.includes(b.action)) E(`${bAt}: 未知 action "${b.action}"`);
       if (b.action === 'pause' && !b.hint) W(`${bAt}: pause 没给 hint —— 观众会看到一个没有问题的暂停框`);
+      if (b.action === 'hold' && !(b.dur >= HOLD_MIN)) {
+        E(`${bAt}: hold 的 dur 必须 >= ${HOLD_MIN}s（短于此不算「能重读的静态窗口」）`);
+      }
       if (b.dur != null && !(b.dur > 0)) E(`${bAt}: dur 必须为正`);
       const targets = b.target == null ? [] : Array.isArray(b.target) ? b.target : [b.target];
       for (const t of targets) {
@@ -170,6 +194,10 @@ export function validate(spec) {
       if (b.action === 'speak') {
         if (!b.text) E(`${bAt}: speak 需要 text`);
         else speakChars.push([b.at, b.text.length]);
+      }
+      if (b.action === 'draw' && (b.from != null || b.to != null)) {
+        const f = b.from ?? 0, t2 = b.to ?? 1;
+        if (!(f >= 0 && t2 <= 1 && f < t2)) E(`${bAt}: draw 的 from/to 必须满足 0 <= from < to <= 1（当前 ${f} → ${t2}）`);
       }
       if (b.action === 'morph') {
         if (b.charProgress) { if (!b.fromText) E(`${bAt}: morph.charProgress 需要 fromText`); }
@@ -200,6 +228,16 @@ export function validate(spec) {
     if (sc.quiz) {
       const q = sc.quiz;
       if (!q.q) E(`${at}.quiz: 缺 q`);
+      // kind 决定门禁严格程度：预测题不许送答案，回忆题（教完再考）允许。
+      // 默认 predict —— 预测比重认有价值得多，宽松要显式声明。
+      // at：把预测题放到幕中间。先问后讲才叫预测 —— 挂在幕尾时答案已经讲完了。
+      if (q.at != null) {
+        if (typeof q.at !== 'number' || q.at < 0) E(`${at}.quiz.at 必须是 ≥0 的秒数`);
+        else if (q.at > (Number(sc.duration) || 0)) E(`${at}.quiz.at=${q.at} 超出本幕时长 ${sc.duration}s`);
+      }
+      if (q.kind != null && !['predict', 'recall'].includes(q.kind)) {
+        E(`${at}.quiz.kind 只能是 'predict'（先问后讲，答案不许在画面上）或 'recall'（讲完再考，允许）`);
+      }
       if (!Array.isArray(q.opts) || q.opts.length < 2) E(`${at}.quiz: 至少 2 个选项`);
       else {
         const ok = q.opts.filter((o) => o.ok).length;
@@ -208,6 +246,39 @@ export function validate(spec) {
       }
     }
   });
+
+  // ---- 叙事结构：每幕声明节拍，且没有节拍被饿死 ----
+  const beatTotals = new Map();
+  spec.scenes.forEach((sc, si) => {
+    const at = `scenes[${si}](${sc.id ?? '?'})`;
+    if (!sc.beat) {
+      E(`${at}: 缺 beat —— 每一幕要声明它服务哪个叙事节拍（${NARRATIVE_BEATS.join(' / ')}）`);
+    } else if (!NARRATIVE_BEATS.includes(sc.beat)) {
+      E(`${at}: 未知 beat "${sc.beat}"，只能是 ${NARRATIVE_BEATS.join(' / ')}`);
+    } else {
+      beatTotals.set(sc.beat, (beatTotals.get(sc.beat) ?? 0) + (Number(sc.duration) || 0));
+    }
+  });
+  if (spec.scenes.length >= 3) {
+    const first = spec.scenes[0].beat, last = spec.scenes[spec.scenes.length - 1].beat;
+    if (first && !['hook', 'problem'].includes(first)) W(`第一幕的 beat 是 "${first}" —— 通常该用 hook（一个反直觉的数字）或 problem（听众现在的痛）`);
+    if (last && last !== 'payoff') W(`最后一幕的 beat 是 "${last}" —— 通常该用 payoff（收尾 + 一个能带走的动作）`);
+    if (!beatTotals.has('boundary')) {
+      E('没有任何一幕是 boundary —— 只有支持证据的讲解是宣传，不是教学。补一幕"什么时候不该这么做"');
+    }
+    if (!beatTotals.has('mechanism') && spec.scenes.length >= 4) W('没有任何一幕是 mechanism —— 只讲结论不讲过程，观众记不住');
+  }
+  if (total > 0) {
+    for (const [b, sec] of beatTotals) {
+      const share = (sec / total) * 100;
+      if (share < BEAT_MIN_SHARE) {
+        E(`叙事节拍 "${b}" 只占 ${share.toFixed(0)}% 时长（${sec.toFixed(0)}s / 全场 ${total.toFixed(0)}s）`
+          + ` —— 低于 ${BEAT_MIN_SHARE}% 说明它是装饰性的，要么讲透要么删掉`);
+      } else if (share > BEAT_MAX_SHARE) {
+        W(`叙事节拍 "${b}" 占了 ${share.toFixed(0)}% 时长 —— 头重脚轻，观众会累`);
+      }
+    }
+  }
 
   if (total > 15 * 60) W(`全场 ${(total / 60).toFixed(1)} 分钟，超过 15 分钟 —— 考虑拆成两讲`);
   return { ok: errors.length === 0, errors, warnings };
@@ -638,20 +709,38 @@ function stateAt(compiled, el, t) {
     opacity: 1, dx: 0, dy: 0, scale: 1, rotate: 0, p: 1, grow: 1,
     value: el.value ?? 0, text: el.text, spot: 0, dim: 0, flash: 0, t,
   };
+  // 分段标量（draw / grow / countUp）的正确语义：
+  //   一个标量的当前值 = **最近一个已开始的那一段**算出来的值；
+  //   如果一段都还没开始，才用第一段的 from 初始化。
+  // ⚠️ 踩过的坑：分段后，后面的段在"还没轮到它"时会把标量提前设成自己的 from
+  //    （因为 p=0 → from + (to-from)*0 = from）。于是 fourier 第一幕在 t=3s
+  //    就把 p 顶到 0.66，画出 2/3 的谐波 —— 而且门禁全绿（G4 只查同 t 一致，
+  //    G15 只查变化模式），只能靠看帧发现。用 started 集合区分"已开始/未轮到"。
+  // seen：这个 action 是否**已经露过面**（不论是否已开始）。
+  // 只需一个集合 —— 已开始的那段会把自己登记进去，于是后面的段全部跳过；
+  // 一段都没开始时，第一段负责初始化，登记后后面的段同样跳过。
+  // （第一版用了 started，但初始化分支 continue 掉了、从没登记 → 每段都覆盖一次，
+  //   结果 t=0 时 p=0.66。是"看 p 随时间"的曲线发现的，不是门禁发现的。）
+  const seen = new Set();
   for (const b of compiled.perEl.get(el.id) ?? []) {
     const dur = b.dur ?? (b.action === 'reveal' ? 0.5 : 0.6);
     const p = clamp01((t - b.at) / dur);
-    if (t < b.at && (b.action === 'reveal' || b.action === 'draw' || b.action === 'countUp' || b.action === 'morph')) {
-      // 还没到时间：这些动作"未发生"意味着完全不可见 / 未画出
-      if (b.action === 'reveal') s.opacity = 0;
-      if (b.action === 'draw') s.p = 0;
-      if (b.action === 'countUp') s.value = b.from ?? 0;
-      if (b.action === 'morph') s.text = el.text;
-      continue;
+    const SCALAR = b.action === 'draw' || b.action === 'grow' || b.action === 'countUp';
+    if (t < b.at) {
+      if (SCALAR) {
+        if (seen.has(b.action)) continue;         // 不是第一段 → 不要动标量
+        seen.add(b.action);
+        if (b.action === 'draw') s.p = b.from ?? 0;
+        if (b.action === 'grow') s.grow = b.from ?? 0;
+        if (b.action === 'countUp') s.value = b.from ?? 0;
+        continue;
+      }
+      if (b.action === 'reveal') { s.opacity = 0; continue; }
+      if (b.action === 'morph') { s.text = el.text; continue; }
     }
     const fn = ACTIONS[b.action];
     if (fn) fn(s, ease(b.ease ?? 'out', p), b, t);
-    if (b.action === 'reveal' && t < b.at) s.opacity = 0;
+    if (SCALAR) seen.add(b.action);
   }
   return s;
 }
@@ -726,6 +815,8 @@ export function createDeck(spec, opts = {}) {
       this.render();
       if (play != null) this.playing = play;
       this.hideQuiz();
+      // 只记状态、不弹窗：seek/导出是纯函数路径，弹窗只在**播放**时发生。
+      this.quizShown = this.scene.quiz?.at != null && at >= this.scene.quiz.at;
       this.updateBar();
       spec.hooks?.onScene?.(this.index, this.scene);
     },
@@ -759,11 +850,20 @@ export function createDeck(spec, opts = {}) {
       const out = {};
       for (const el of sc.elements ?? []) {
         const s = stateAt(c, el, t);
-        out[el.id] = { opacity: +s.opacity.toFixed(4), value: +Number(s.value).toFixed(4), p: +s.p.toFixed(4), grow: +s.grow.toFixed(4), spot: s.spot, dim: s.dim };
+        out[el.id] = {
+          opacity: +s.opacity.toFixed(4), value: +Number(s.value).toFixed(4), p: +s.p.toFixed(4),
+          grow: +s.grow.toFixed(4), spot: s.spot, dim: s.dim,
+          // 以下字段供 G15 段长门禁判断「这一帧相对上一帧有没有变化」
+          dx: +s.dx.toFixed(3), dy: +s.dy.toFixed(3), scale: +s.scale.toFixed(4),
+          rotate: +s.rotate.toFixed(4), flash: s.flash, text: s.text,
+        };
       }
+      // 相机运动也是画面变化（zoomTo 期间元素签名不变，但画面在动）
+      const cam = cameraAt(c, t);
+      out['$cam'] = { k: +cam.k.toFixed(4), x: +cam.x.toFixed(2), y: +cam.y.toFixed(2) };
       return out;
     },
-    quizAnswers: {}, quizOpen: false,
+    quizAnswers: {}, quizOpen: false, quizShown: false, resumeAfter: false,
     /** 只给门禁/调试用：改掉某个 canvas2d/three 元素的数据并立刻重渲染（G11 的数据扰动测试） */
     setData(id, data) {
       const el = (deck.scene.elements ?? []).find((e) => e.id === id);
@@ -777,6 +877,7 @@ export function createDeck(spec, opts = {}) {
       global: +deck.globalAt().toFixed(3), playing: deck.playing, frames: deck.frames,
       total: deck.totalDuration(), errors: report.errors, warnings: report.warnings,
       quizOpen: !!deck.quizOpen,
+      quizShown: !!deck.quizShown,
       quizAnswers: { ...deck.quizAnswers },
       ink: { calls: ink._stats.calls ?? 0, growing: ink._stats.last ?? 0, peak: ink._stats.peak ?? 0, len: ink._stats.len ?? 0, cum: Math.round(ink._stats.cum ?? 0) },
       // 画布内标签盒 + 该画布的设计尺寸：让门禁能算"标签是否互相遮挡 / 是否被画布裁掉"
@@ -919,6 +1020,12 @@ export function createDeck(spec, opts = {}) {
     if (cap) {
       cap.textContent = line?.text ?? '';
       cap.dataset.on = line ? '1' : '0';
+      // 淡入淡出**由 t 算**，不用 CSS transition。
+      // 任何"自带时钟"的东西都会让同一 t 渲染出不同画面，而 render(t) 必须是纯函数。
+      const FADE = 0.18;
+      cap.style.opacity = line
+        ? String(Math.min(1, Math.max(0, (t - line.at) / FADE)) * Math.min(1, Math.max(0, (line.at + line.dur - t) / FADE)))
+        : '0';
     }
     // 场景标题
     const tag = document.getElementById('deck-tag');
@@ -940,12 +1047,36 @@ export function createDeck(spec, opts = {}) {
     if (deck.playing) {
       const dt = Math.min(0.05, (now - (deck.last ?? now)) / 1000);
       deck.last = now;
+      // pause 是时间轴上的一个点，只有**播放中越过它**才该触发。
+      // 踩过：旧实现只看 `deck.t >= b.at`，于是"拖到 30s 再按播放"会立刻
+      // 弹出 26.5s 那句提示 —— 用户完全无法理解。
+      const prevT = deck.t;
       deck.t += dt;
       if (deck.t >= deck.scene.duration) {
-        if (deck.index < spec.scenes.length - 1) deck.goScene(deck.index + 1, { play: true });
-        else { deck.t = deck.scene.duration; deck.playing = false; this.showQuiz?.(); }
+        // 幕尾复习题：**先问再走**。旧写法只在最后一幕才 showQuiz，
+        // 于是非末幕的幕尾题从来不会自动弹（工具栏里有按钮，但没人会去点）。
+        if (deck.scene.quiz && !deck.quizShown) {
+          deck.t = deck.scene.duration;
+          deck.quizShown = true;
+          showQuiz();
+        } else if (deck.index < spec.scenes.length - 1) {
+          deck.goScene(deck.index + 1, { play: true });
+        } else {
+          deck.pause();   // 最后一幕就停在这儿
+        }
       }
-      maybePause();
+      // 预测题：讲到 at 就停下来问，回答完再继续 —— 这才是"先问后讲"。
+      // 挂在幕尾的题是复习（recall），答案已经在画面上；这里的题必须早于答案。
+      const q = deck.scene.quiz;
+      if (q?.at != null && !deck.quizShown && deck.t >= q.at) {
+        deck.quizShown = true;
+        // ⚠️ 不要在这里提前 deck.playing = false —— showQuiz() 靠它记 resumeAfter，
+        //    提前置 false 会让"答完继续播"永远恢复不了。暂停交给 showQuiz 里的 pause()。
+        showQuiz();   // ⚠️ 这里曾经写的是 this.showQuiz?.() —— tick 是普通函数，
+                      // this 不是 deck，于是**幕尾/幕中的题从来不会自动弹**。
+                      // G6 直接调 DECK.showQuiz() 开题，所以门禁一直没覆盖这条路径。
+      }
+      maybePause(prevT);
       maybeSpeak();
       render();
       updateBar();
@@ -962,12 +1093,14 @@ export function createDeck(spec, opts = {}) {
    * 所以确定性渲染（G4）与出片链路完全不受影响。
    */
   const firedPauses = new Set();
-  function maybePause() {
+  function maybePause(prevT = 0) {
     const list = deck.compiled.pauses ?? [];
     for (const b of list) {
       const key = `${deck.index}:${b.at}`;
       if (firedPauses.has(key)) continue;
       if (deck.t < b.at) continue;
+      if (prevT >= b.at) continue;   // 是 seek 越过的，不是播到的
+
       firedPauses.add(key);
       deck.pause();
       deck.pausedAt = b.at;
@@ -1018,6 +1151,8 @@ export function createDeck(spec, opts = {}) {
    */
   function showQuiz() {
     const sc = deck.scene;
+    // 记住"弹题之前是不是在播" —— 答完要回到原来的状态，而不是一律停在原地。
+    if (!deck.quizOpen) deck.resumeAfter = deck.playing;
     deck.pause();
     const box = document.getElementById('quiz');
     if (!box || !sc.quiz) return;
@@ -1050,7 +1185,16 @@ export function createDeck(spec, opts = {}) {
     const close = document.createElement('button');
     close.textContent = '继续 →';
     close.style.marginTop = '12px';
-    close.onclick = () => { hideQuiz(); if (deck.index < spec.scenes.length - 1) deck.next(); };
+    // 「继续」的语义取决于题在哪问的：
+    //   幕中题（quiz.at）→ **接着播本幕**，答案就在后面。跳到下一幕等于永远看不到答案
+    //                     （这曾经是真 bug：quiz.at 因此交互上完全失效）
+    //   幕尾题         → 进下一幕，并恢复弹题前的播放状态（不是一律停住）
+    close.onclick = () => {
+      hideQuiz();
+      if (sc.quiz.at != null) { if (deck.resumeAfter) deck.play(); return; }
+      if (deck.index < spec.scenes.length - 1) deck.goScene(deck.index + 1, { play: deck.resumeAfter });
+      // 最后一幕：答完就停在这里
+    };
     card.append(opts, why, close);
     box.append(card);
     spec.hooks?.onQuiz?.(sc.id);

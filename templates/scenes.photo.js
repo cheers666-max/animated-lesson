@@ -15,12 +15,16 @@
  *    （踩过：资源放在仓库根的 assets/ 时，两张图全部 404，G13 直接报红。）
  */
 export const deck = {
-  meta: { title: '图片与照片：把静态素材讲成过程', theme: 'ink' },
+  meta: { title: '图片与照片：把静态素材讲成过程', theme: 'ink',
+    oneLine: '静态照片只有变成时间的函数才开始承担讲解任务。',},
   scenes: [
     {
       id: 'cover',
       title: '一张照片能讲什么',
       duration: 23,
+
+      beat: 'hook',
+
       elements: [
         // 满幅照片 + 缓慢推近：ken 是"推近幅度"，由 draw 动作把 p 从 0 推到 1
         { id: 'ph', type: 'image', src: './assets/brush.jpg', fit: 'cover', bleed: true,
@@ -38,13 +42,23 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
+        { at: 0.3, action: 'spotlight', target: 'ph', dur: 0.5 },   // G16 焦点：静态图片有个问题：它把所有信息同时摊开，观众…
         { at: 0.6, action: 'reveal', target: 'ph', dur: 0.8 },
-        { at: 0.9, action: 'draw', target: 'ph', dur: 16 },        // 16 秒缓慢推近
+        // 推近分三段，段间插 hold —— 一口气推 16 秒，观众没有稳定帧可以指
+        { at: 0.9, action: 'draw', target: 'ph', from: 0, to: 0.35, dur: 5 },
+        { at: 6.1, action: 'hold', dur: 1.6 },
+        { at: 6.8, action: 'dim', target: 'ph', dur: 0.5 },
+        { at: 6.8, action: 'spotlight', target: 'b1', dur: 0.5 },   // G16 焦点：推近改变这件事。画面在动，眼睛就跟着动。…
+        { at: 7.8, action: 'draw', target: 'ph', from: 0.35, to: 0.7, dur: 5 },
+        { at: 10.8, action: 'dim', target: 'b1', dur: 0.5 },
+        { at: 10.8, action: 'spotlight', target: 'ph', dur: 0.5 },   // G16 焦点：但推近必须是时间的函数，否则导出的视频会闪 …
+        { at: 13.0, action: 'hold', dur: 1.6 },
+        { at: 14.7, action: 'draw', target: 'ph', from: 0.7, to: 1, dur: 5 },
         { at: 1.4, action: 'reveal', target: 's', dur: 0.6 },
         { at: 2.6, action: 'reveal', target: 'm', dur: 0.4 },
         { at: 2.8, action: 'countUp', target: 'm', from: 0, to: 16, dur: 1.2 },
         { at: 5.0, action: 'reveal', target: 'b1', dur: 0.6 },
-        { at: 14.0, action: 'reveal', target: 'bd', dur: 0.6 },
+        { at: 20.0, action: 'reveal', target: 'bd', dur: 0.6 },
         { at: 0.5, action: 'speak', text: '静态图片有个问题：它把所有信息同时摊开，观众不知道该看哪里。' },
         { at: 7.0, action: 'speak', text: '推近改变这件事。画面在动，眼睛就跟着动。' },
         { at: 11.0, action: 'speak', text: '但推近必须是时间的函数，否则导出的视频会闪 —— 这是门禁 G4 在管的事。' },
@@ -55,6 +69,9 @@ export const deck = {
       id: 'overlay',
       title: '图上画笔画',
       duration: 24,
+
+      beat: 'mechanism',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '叠加 · 图片 + 画布', x: 7, y: 8, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '在一张图上，<br>把要讲的那一笔画出来', x: 7, y: 14, w: 52, size: 34 },
@@ -102,9 +119,14 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
+        { at: 0.4, action: 'spotlight', target: 'bg', dur: 0.5 },   // G16 焦点：贝塞尔曲线谁都见过。但静态图上，你看不出控制…
         { at: 0.7, action: 'reveal', target: 'bg', dur: 0.7 },
         { at: 1.2, action: 'reveal', target: 'ca', dur: 0.5 },
         { at: 2.0, action: 'reveal', target: 'note', dur: 0.6 },
+        { at: 16.3, action: 'dim', target: 'note', dur: 0.5 },
+        { at: 16.3, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：边界也在这儿：一张图里要讲超过三个地方，逐笔…
+        { at: 7.8, action: 'dim', target: 'bg', dur: 0.5 },
+        { at: 7.8, action: 'spotlight', target: 'note', dur: 0.5 },   // G16 焦点：让曲线自己长出来，控制点和曲线的关系就变成可…
         { at: 17.0, action: 'reveal', target: 'bd', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '贝塞尔曲线谁都见过。但静态图上，你看不出控制点是怎么拽动曲线的。' },
         { at: 8.0, action: 'speak', text: '让曲线自己长出来，控制点和曲线的关系就变成可见的了。' },
@@ -123,6 +145,9 @@ export const deck = {
       id: 'howto',
       title: '怎么用',
       duration: 18,
+
+      beat: 'boundary',
+
       elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '用法 · 三条', x: 8, y: 12, w: 60 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '图片元素怎么写', x: 8, y: 19, w: 60, size: 40 },
@@ -145,9 +170,12 @@ export const deck = {
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
+        { at: 0.4, action: 'spotlight', target: 'c', dur: 0.5 },   // G16 焦点：写法就这样。三个字段值得记住：fit、ken…
         { at: 0.8, action: 'reveal', target: 'c', dur: 0.6 },
         { at: 2.0, action: 'reveal', target: 'l', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '写法就这样。三个字段值得记住：fit、ken、credit。' },
+        { at: 6.8, action: 'dim', target: 'c', dur: 0.5 },
+        { at: 6.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：最容易忽略的是 credit —— 来源必须…
         { at: 7.0, action: 'speak', text: '最容易忽略的是 credit —— 来源必须标在画面上。' },
         { at: 12.0, action: 'speak', text: '还有一条：图片没解码完不能截图，否则确定性门禁会随机变红。' },
       ],
