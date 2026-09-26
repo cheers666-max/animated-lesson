@@ -107,7 +107,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | `engine/` | 引擎（CSS 主题 + 场景内核 + three 适配器） |
 | `templates/` | 七份参考课件（about / strokes / instancing / bindgroups / photo / fourier / from-md-demo）+ 可跑壳 |
 | `scripts/` | **素材→骨架**（from-md）+ 静态校验（含内容深度体检）+ 浏览器门禁 + 一键出片 + 链接检查 + 交付前一键 |
-| `references/` | DSL 参考 · 按笔画模式 · 门禁与失败模式库 · 设计取舍 · **skill 优化路线图** |
+| `references/` | DSL 参考 · 按笔画模式 · 门禁与失败模式库 · 设计取舍 · skill 优化路线图 · **线上版图（竞品实测）** |
 | `out/` | 生成的视频（不是源码，用上面命令重新生成） |
 | `intro.html` | 介绍页 |
 

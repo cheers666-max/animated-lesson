@@ -120,6 +120,8 @@ references/
   scene-dsl.md       DSL 完整参考（元素、动作、API、ink 工具箱）
   stroke-drawing.md  「按笔画出来」模式参考：5 个 case + 设计规则 + 度量演进
   authoring-gates.md 门禁清单 + 失败模式库（A–F 六类，含真实踩坑）
+  landscape.md       **线上版图**：HyperFrames/Manim/Motion Canvas/Remotion 对比，
+                     该抄什么、该放弃什么、什么是真差异化（含实测核实记录）
   design-notes.md    设计取舍：从 OpenMAIC 抄了什么、为什么不抄什么
 ```
 
