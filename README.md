@@ -6,6 +6,9 @@ Web 原生（`canvas2d` + WGSL 风格的 `three` 可选），**零 npm 依赖** 
 
 **先看这两个**：
 
+- 🎬 [`out/gates.mp4`](out/gates.mp4) —— **新能力的验收样本**：门禁纪律（5 幕 / **90 秒**）。
+  每一幕刻意用上一条这一轮新加的门禁：`quiz.at` 先问后讲、`draw {from,to}` + `hold` 分段、
+  每条旁白配焦点、第 4 幕是 `boundary`。跑 `templates/scenes.gates.js`
 - 🎬 [`out/intro-why-stroke-by-stroke.mp4`](out/intro-why-stroke-by-stroke.mp4) —— **元课件**：用这个模式介绍这个模式（8 幕 / 226 秒 / 1920×1080）
 - 🎬 [`out/why-stroke-by-stroke.mp4`](out/why-stroke-by-stroke.mp4) —— **按笔画示例**：de Casteljau / A* / SDF 五个 case（5 幕 / 98 秒）
 - 🎬 [`out/fourier.mp4`](out/fourier.mp4) —— **傅立叶变换**：主张→机制→量级→边界→推论（5 幕 / 160 秒）
@@ -57,7 +60,7 @@ node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 
 node scripts/lint-scenes.mjs      # 静态校验 + 内容深度体检（毫秒级）
 node scripts/verify.mjs           # 19 项浏览器断言 + 出片链路
-./scripts/check-all.sh            # 交付前一键：lint + 链接 + 7 份课件全量门禁 + 负向测试
+./scripts/check-all.sh            # 交付前一键：lint + 链接 + 8 份课件全量门禁 + 负向测试
 node scripts/gate-selftest.mjs    # 负向测试：证明门禁真的会失败（造坏课件 → 要求报红）
 
 # 一键出片：帧直接管道进 ffmpeg，不落盘
@@ -108,7 +111,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | 目录 | 内容 |
 |---|---|
 | `engine/` | 引擎（CSS 主题 + 场景内核 + three 适配器） |
-| `templates/` | 七份参考课件（about / strokes / instancing / bindgroups / photo / fourier / from-md-demo）+ 可跑壳 |
+| `templates/` | 八份参考课件（about / strokes / instancing / bindgroups / photo / fourier / from-md-demo / **gates**）+ 可跑壳 |
 | `scripts/` | **素材→骨架**（from-md）+ 静态校验（含内容深度体检）+ 浏览器门禁 + 一键出片 + 链接检查 + 交付前一键 |
 | `references/` | DSL 参考 · 按笔画模式 · 门禁与失败模式库 · 设计取舍 · skill 优化路线图 · **线上版图（竞品实测）** · **和 HyperFrames 的分工** |
 | `out/` | 生成的视频（不是源码，用上面命令重新生成） |

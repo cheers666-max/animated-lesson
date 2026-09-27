@@ -111,6 +111,8 @@ engine/
   three-adapter.js   three 懒加载 + 2D 等距投影降级
 templates/
   scenes.instancing.js   参考课件（5 幕：钩子→机制→3D→数据→边界）
+  scenes.gates.js        **新能力验收样本**（5 幕 / 90 秒）：quiz.at 先问后讲 +
+                         draw{from,to}+hold 分段 + 每条旁白配焦点 + boundary 幕
   deck.html              可跑课件壳
 scripts/
   lint-scenes.mjs    静态校验（复用 validate + 源码扫非确定性）
