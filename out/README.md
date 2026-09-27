@@ -6,12 +6,18 @@
 | `why-stroke-by-stroke.mp4` | **按笔画示例**：de Casteljau / A* / SDF 五个 case（5 幕 / 98 秒 / 1280×720） |
 | `fourier-storyboard.png` | **傅立叶故事板**：16 帧一次看完 160 秒（4×4，带时间码，1895×1071） |
 | `fourier.mp4` | **傅立叶变换**：主张→机制→量级→边界→推论 完整走一遍（5 幕 / 160 秒 / 1280×720） |
+| `gates.mp4` | **新能力验收样本**：门禁纪律 —— `quiz.at` 先问后讲 / `draw{from,to}`+`hold` 分段 / 每幕一个 `boundary`（5 幕 / **90 秒** / 1280×720） |
+| `gates-storyboard.png` | 上面那份的故事板：16 帧看完 90 秒（4×4，带时间码） |
 
 都是确定性时间轴逐帧导出的，无声，字幕已烘焙进画面（G12 量过像素才敢这么说）。
 
 重新生成（帧直接管道进 ffmpeg，不落盘）：
 
 ```bash
+# 新能力验收样本（最短，90 秒，约 1 分钟出片）
+node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.gates.js' \
+     --mp4=out/gates.mp4 --fps=24 --size=1280x720
+
 # 元课件 1080p
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.about.js' \
      --mp4=out/intro-why-stroke-by-stroke.mp4 --fps=24 --size=1920x1080
