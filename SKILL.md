@@ -122,6 +122,9 @@ references/
   authoring-gates.md 门禁清单 + 失败模式库（A–F 六类，含真实踩坑）
   landscape.md       **线上版图**：HyperFrames/Manim/Motion Canvas/Remotion 对比，
                      该抄什么、该放弃什么、什么是真差异化（含实测核实记录）
+  hyperframes-handoff.md
+                     **和 HyperFrames 的分工**：只接门禁层不接管线，
+                     三条接入路径、明确不做的五件事
   design-notes.md    设计取舍：从 OpenMAIC 抄了什么、为什么不抄什么
 ```
 
