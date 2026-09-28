@@ -113,6 +113,8 @@ templates/
   scenes.instancing.js   参考课件（5 幕：钩子→机制→3D→数据→边界）
   scenes.gates.js        **新能力验收样本**（5 幕 / 90 秒）：quiz.at 先问后讲 +
                          draw{from,to}+hold 分段 + 每条旁白配焦点 + boundary 幕
+  scenes.kvcache.js      真实文章改编（7 幕 / 158 秒）：from-md 路径跑不通时的
+                         手工样本 —— 论证弧 + 四块数据画布 + 一处纠正原文的边界
   deck.html              可跑课件壳
 scripts/
   lint-scenes.mjs    静态校验（复用 validate + 源码扫非确定性）

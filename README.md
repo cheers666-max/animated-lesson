@@ -60,7 +60,7 @@ node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 
 node scripts/lint-scenes.mjs      # 静态校验 + 内容深度体检（毫秒级）
 node scripts/verify.mjs           # 19 项浏览器断言 + 出片链路
-./scripts/check-all.sh            # 交付前一键：lint + 链接 + 8 份课件全量门禁 + 负向测试
+./scripts/check-all.sh            # 交付前一键：lint + 链接 + 9 份课件全量门禁 + 负向测试
 node scripts/gate-selftest.mjs    # 负向测试：证明门禁真的会失败（造坏课件 → 要求报红）
 
 # 一键出片：帧直接管道进 ffmpeg，不落盘
@@ -111,7 +111,7 @@ node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
 | 目录 | 内容 |
 |---|---|
 | `engine/` | 引擎（CSS 主题 + 场景内核 + three 适配器） |
-| `templates/` | 八份参考课件（about / strokes / instancing / bindgroups / photo / fourier / from-md-demo / **gates**）+ 可跑壳 |
+| `templates/` | 九份参考课件（about / strokes / instancing / bindgroups / photo / fourier / from-md-demo / gates / **kvcache**）+ 可跑壳 |
 | `scripts/` | **素材→骨架**（from-md）+ 静态校验（含内容深度体检）+ 浏览器门禁 + 一键出片 + 链接检查 + 交付前一键 |
 | `references/` | DSL 参考 · 按笔画模式 · 门禁与失败模式库 · 设计取舍 · skill 优化路线图 · **线上版图（竞品实测）** · **和 HyperFrames 的分工** |
 | `out/` | 生成的视频（不是源码，用上面命令重新生成） |

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 交付前一键：静态校验 + 8 份课件的浏览器门禁 + 链接检查 + 负向测试
+# 交付前一键：静态校验 + 9 份课件的浏览器门禁 + 链接检查 + 负向测试
 #   ./scripts/check-all.sh            全部
 #   ./scripts/check-all.sh --fast     只跑静态（不启浏览器）
 set -uo pipefail
@@ -11,7 +11,7 @@ run node scripts/lint-scenes.mjs
 run node scripts/check-links.mjs
 
 if [ "${1:-}" != "--fast" ]; then
-  for s in about strokes instancing bindgroups photo fourier from-md-demo gates; do
+  for s in about strokes instancing bindgroups photo fourier from-md-demo gates kvcache; do
     case "$s" in
       instancing) DECK="templates/deck.html" ;;
       *)          DECK="templates/deck.html?scenes=./scenes.$s.js" ;;

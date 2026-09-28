@@ -8,12 +8,18 @@
 | `fourier.mp4` | **傅立叶变换**：主张→机制→量级→边界→推论 完整走一遍（5 幕 / 160 秒 / 1280×720） |
 | `gates.mp4` | **新能力验收样本**：门禁纪律 —— `quiz.at` 先问后讲 / `draw{from,to}`+`hold` 分段 / 每幕一个 `boundary`（5 幕 / **90 秒** / 1280×720） |
 | `gates-storyboard.png` | 上面那份的故事板：16 帧看完 90 秒（4×4，带时间码） |
+| `kvcache.mp4` | **文章改编**：《被讨厌的算法 · 第一篇》带宽与 KV Cache（7 幕 / **158 秒** / 1280×720）。数字全部由 `scripts/inference-numbers.mjs` 复算 |
+| `kvcache-storyboard.png` | 上面那份的故事板：16 帧看完 158 秒 |
 
 都是确定性时间轴逐帧导出的，无声，字幕已烘焙进画面（G12 量过像素才敢这么说）。
 
 重新生成（帧直接管道进 ffmpeg，不落盘）：
 
 ```bash
+# 文章改编（158 秒，约 5 分钟出片）
+node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.kvcache.js' \
+     --mp4=out/kvcache.mp4 --fps=24 --size=1280x720
+
 # 新能力验收样本（最短，90 秒，约 1 分钟出片）
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.gates.js' \
      --mp4=out/gates.mp4 --fps=24 --size=1280x720
