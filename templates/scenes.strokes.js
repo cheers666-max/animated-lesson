@@ -193,7 +193,7 @@ export const deck = {
     {
       id: 'casteljau',
       title: '贝塞尔曲线是怎么被画出来的',
-      duration: 26,
+      duration: 27,
 
       beat: 'mechanism',
 
@@ -244,7 +244,7 @@ export const deck = {
     {
       id: 'astar',
       title: 'A* 为什么走这条路',
-      duration: 20,
+      duration: 20.5,
 beat: 'mechanism',
 elements: [
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: 'CASE 2 · 顺序就是知识', x: 4, y: 4, w: 60 },

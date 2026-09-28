@@ -295,7 +295,12 @@ const hex = (el) => el.color || null;
 function renderText(el, node, s) {
   node.className = 'el el-text';
   node.dataset.role = el.role ?? 'body';
-  if (s.text != null && node.textContent !== s.text) node.textContent = s.text;
+  // 文本按 HTML 解释 —— 和 list 的 items 语义对齐（那边一直用的 innerHTML）。
+  // 原来这里是 node.textContent，于是文本里的 <br>/<b> 被原样印到了画面上：
+  // 8 份课件中招，而**没有任何一条门禁看得见它**（G2b 只量盒子大小，多两个字符不会溢出）。
+  // 见 design-notes §10；G20 现在盯着这一类。
+  // 安全性：HTML5 只在 < 后跟字母 / ! ? 时才当标签，所以 `绑定数 < 200 时` 这种写法依然安全。
+  if (s.text != null && node.__src !== s.text) { node.innerHTML = s.text; node.__src = s.text; }
   node.style.fontSize = `${el.size ?? 26}px`;
   if (el.weight) node.style.fontWeight = String(el.weight);
   node.style.color = hex(el) || '';
@@ -969,8 +974,14 @@ export function createDeck(spec, opts = {}) {
     for (const el of sc.elements ?? []) {
       if (el.below == null) continue;
       const t = topById.get(el.id);
-      // 最后夹一道：不许推到安全区外（推出去就是遮挡，宁可挤一点也不出界）
-      if (t != null) compiled.nodes.get(el.id).style.top = `${Math.min(t, stageH * 0.92)}px`;
+      // 最后夹一道：不许推到安全区外（推出去就是遮挡，宁可挤一点也不出界）。
+      // 注意要**减去元素自己的高度** —— 只夹 top 的话，一个撑到 92% 的两行文本
+      // 会接着往下长，直接穿进字幕带（fourier 第 1 幕就是这么被 G2d 抓到的）。
+      // 减完可能顶到锚点上 —— 那就让 G14（重叠）大声报出来，而不是默默溢出。
+      if (t != null) {
+        const limit = stageH * 0.92 - ownH(el.id);
+        compiled.nodes.get(el.id).style.top = `${Math.min(t, limit)}px`;
+      }
     }
 
     deck.compiled = compiled;
@@ -1295,4 +1306,5 @@ export function createDeck(spec, opts = {}) {
   return deck;
 }
 
-export default { createDeck, validate, EASE, ACTIONS };
+export { compileScene };
+export default { createDeck, compileScene, validate, EASE, ACTIONS };

@@ -6,12 +6,12 @@ Web 原生（`canvas2d` + WGSL 风格的 `three` 可选），**零 npm 依赖** 
 
 **先看这两个**：
 
-- 🎬 [`out/gates.mp4`](out/gates.mp4) —— **新能力的验收样本**：门禁纪律（5 幕 / **90 秒**）。
+- 🎬 [`out/gates.mp4`](out/gates.mp4) —— **新能力的验收样本**：门禁纪律（5 幕 / **102 秒**）。
   每一幕刻意用上一条这一轮新加的门禁：`quiz.at` 先问后讲、`draw {from,to}` + `hold` 分段、
   每条旁白配焦点、第 4 幕是 `boundary`。跑 `templates/scenes.gates.js`
 - 🎬 [`out/intro-why-stroke-by-stroke.mp4`](out/intro-why-stroke-by-stroke.mp4) —— **元课件**：用这个模式介绍这个模式（8 幕 / 226 秒 / 1920×1080）
 - 🎬 [`out/why-stroke-by-stroke.mp4`](out/why-stroke-by-stroke.mp4) —— **按笔画示例**：de Casteljau / A* / SDF 五个 case（5 幕 / 98 秒）
-- 🎬 [`out/fourier.mp4`](out/fourier.mp4) —— **傅立叶变换**：主张→机制→量级→边界→推论（5 幕 / 160 秒）
+- 🎬 [`out/fourier.mp4`](out/fourier.mp4) —— **傅立叶变换**：主张→机制→量级→边界→推论（5 幕 / 164.5 秒）
 - 🌐 [`intro.html`](intro.html) —— 一页看完背景 / 优势 / 场景 / 人群（`./serve.sh` 后打开）
 
 ---
@@ -59,20 +59,29 @@ Web 原生（`canvas2d` + WGSL 风格的 `three` 可选），**零 npm 依赖** 
 node scripts/from-md.mjs docs/你的文档.md --out=templates/scenes.mine.js
 
 node scripts/lint-scenes.mjs      # 静态校验 + 内容深度体检（毫秒级）
-node scripts/verify.mjs           # 19 项浏览器断言 + 出片链路
+node scripts/verify.mjs           # 33 项浏览器断言 + 出片链路
 ./scripts/check-all.sh            # 交付前一键：lint + 链接 + 9 份课件全量门禁 + 负向测试
-node scripts/gate-selftest.mjs    # 负向测试：证明门禁真的会失败（造坏课件 → 要求报红）
+node scripts/gate-selftest.mjs    # 负向测试：13 个用例，证明门禁真的会失败（造坏课件 → 要求报红）
 
 # 一键出片：帧直接管道进 ffmpeg，不落盘
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.mine.js' \
      --mp4=out/mine.mp4 --fps=24 --size=1920x1080
+
+# 铺旁白音轨（macOS `say`；台词直接取自编译后的 beats —— 和字幕同源）
+node scripts/voiceover.mjs mine                       # 只对账：逐句量真实时长和声明窗口的差
+node scripts/voiceover.mjs mine --check               # 塞不进时间轴就退出码 1
+node scripts/voiceover.mjs mine --build --mux=out/mine.mp4   # 出 out/mine-vo.m4a 并合成 out/mine-voiced.mp4
+
+# 旁白互相抢话时：确定性重排时间点（只动 at/duration，一个字都不改）
+node scripts/fix-speak-timing.mjs --dry               # 先看会怎么改
+node scripts/fix-speak-timing.mjs
 ```
 
 ---
 
-## 31 项门禁：凭什么说"讲清楚了"
+## 33 项门禁：凭什么说"讲清楚了"
 
-> 31 个门禁名，但一次常规跑报 27–31 项 —— `G8` 只在课件含 3D 元素时出现，
+> 33 个门禁名，但一次常规跑报 29–33 项 —— `G8` 只在课件含 3D 元素时出现，
 > `G12`/`FRAMES`/`MP4` 只在 `--mp4` 出片时出现。**不会静默跳过**：跳过的项在报告里不占行，但每一行都对应一次真实断言。
 
 一半是**技术门禁**（防止坏了），一半是**教学门禁**（防止空转）。

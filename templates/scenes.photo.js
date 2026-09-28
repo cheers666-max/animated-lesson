@@ -21,7 +21,7 @@ export const deck = {
     {
       id: 'cover',
       title: '一张照片能讲什么',
-      duration: 23,
+      duration: 27.5,
 
       beat: 'hook',
 
@@ -35,9 +35,9 @@ export const deck = {
           bleed: true, static: true, fill: 'bg', opacity: 0.92 },
         { id: 'k', group: 'head', type: 'text', role: 'kicker', text: '图片 · 与动画结合', x: 6, y: 12, w: 40 },
         { id: 't', group: 'head', type: 'text', role: 'title', text: '一张静态照片<br>只能看，不能讲', x: 6, w: 40, size: 40, below: 'k', gap: 1.4 },
-        { id: 's', type: 'text', role: 'body', text: '推近、跟随、局部放大 —— 这些让照片开始承担讲解任务。<br>关键是它们必须是<b>时间的函数</b>，而不是 CSS 动画。', x: 6, w: 40, below: 't', gap: 3 },
+        { id: 's', type: 'text', role: 'body', text: '推近、跟随、局部放大 —— 让照片开始承担讲解任务。<br>但它们必须是<b>时间的函数</b>，不是 CSS 动画。', x: 6, w: 40, below: 't', gap: 3 },
         { id: 'm', type: 'metric', value: 0, unit: 's', label: '推近时长（确定性）', tone: 'good', x: 6, w: 26, decimals: 0, below: 's', gap: 2.6 },
-        { id: 'b1', type: 'text', role: 'note', text: '静态图 0 秒 vs 推近 16 秒 ——<br>同一张照片，可讲解时间多了 16 倍。', x: 6, w: 40, below: 'm', gap: 1.6 },
+        { id: 'b1', type: 'text', role: 'note', text: '静态图 0 秒 vs 推近 16 秒 —— 可讲解时间多了 16 倍。', x: 6, w: 40, below: 'm', gap: 1.6 },
         { id: 'bd', type: 'text', role: 'note', tone: 'bad', text: '边界：纯色 logo 推近 16 秒就是浪费。', x: 6, w: 40, below: 'b1', gap: 1.6 },
       ],
       beats: [
@@ -60,9 +60,9 @@ export const deck = {
         { at: 5.0, action: 'reveal', target: 'b1', dur: 0.6 },
         { at: 20.0, action: 'reveal', target: 'bd', dur: 0.6 },
         { at: 0.5, action: 'speak', text: '静态图片有个问题：它把所有信息同时摊开，观众不知道该看哪里。' },
-        { at: 7.0, action: 'speak', text: '推近改变这件事。画面在动，眼睛就跟着动。' },
-        { at: 11.0, action: 'speak', text: '但推近必须是时间的函数，否则导出的视频会闪 —— 这是门禁 G4 在管的事。' },
-        { at: 15.5, action: 'speak', text: '边界：图里得有细节可看，纯色 logo 推十六秒就是浪费。' },
+        { at: 7.3, action: 'speak', text: '推近改变这件事。画面在动，眼睛就跟着动。' },
+        { at: 11.9, action: 'speak', text: '但推近必须是时间的函数，否则导出的视频会闪 —— 这是门禁 G4 在管的事。' },
+        { at: 20.4, action: 'speak', text: '边界：图里得有细节可看，纯色 logo 推十六秒就是浪费。' },
       ],
     },
     {
@@ -144,7 +144,7 @@ export const deck = {
     {
       id: 'howto',
       title: '怎么用',
-      duration: 18,
+      duration: 21,
 
       beat: 'boundary',
 
@@ -176,8 +176,8 @@ export const deck = {
         { at: 0.6, action: 'speak', text: '写法就这样。三个字段值得记住：fit、ken、credit。' },
         { at: 6.8, action: 'dim', target: 'c', dur: 0.5 },
         { at: 6.8, action: 'spotlight', target: 'l', dur: 0.5 },   // G16 焦点：最容易忽略的是 credit —— 来源必须…
-        { at: 7.0, action: 'speak', text: '最容易忽略的是 credit —— 来源必须标在画面上。' },
-        { at: 12.0, action: 'speak', text: '还有一条：图片没解码完不能截图，否则确定性门禁会随机变红。' },
+        { at: 7.4, action: 'speak', text: '最容易忽略的是 credit —— 来源必须标在画面上。' },
+        { at: 13.7, action: 'speak', text: '还有一条：图片没解码完不能截图，否则确定性门禁会随机变红。' },
       ],
     },
   ],

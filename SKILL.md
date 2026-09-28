@@ -55,7 +55,7 @@ draw(ctx, t, el, api)   // t = 场景内秒数。它是输入，不是时钟。
 | B2 | **写元素**：只用百分比定位，两栏用 `4/44` + `52/44`；内容按 主张/机制/量级/边界 组织 | `references/scene-dsl.md` · `references/skill-roadmap.md` | `validate()` 无越界错误 |
 | B3 | **写动作**：每个元素至少要有一个动作（否则是死元素） | 动作目录 | 无"死元素"警告 |
 | B4 | **做动画载体**：canvas2d 画过程，three 画空间，metric 画数字 | `draw(ctx,t,...)` / `init(THREE,...)` | 静态 lint 全绿 |
-| B5 | **上浏览器验**：`node scripts/verify.mjs` | 31 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感 / G15 节奏 / G16 焦点 / G19 送答案） |
+| B5 | **上浏览器验**：`node scripts/verify.mjs` | 33 项门禁 | 全绿（含 G4 确定性 / G2d 遮挡 / G11 数据敏感 / G15 节奏 / G16 焦点 / G19 送答案 / G20 标记 / G21 旁白排期） |
 | B6 | **写 3D 的降级路径**：`fallback.boxes` 与 3D 共用同一条时间表 | `submissionAt(t)` 模式 | G8 通过（`?three=off` 仍在动） |
 | B7 | **加旁白与预测题** | `speak` / `quiz` | G5、G6 通过 |
 | B8 | **出片** | `--mp4=out/x.mp4 --size=1920x1080` | 得到 1080p mp4（帧不落盘） |
@@ -111,15 +111,17 @@ engine/
   three-adapter.js   three 懒加载 + 2D 等距投影降级
 templates/
   scenes.instancing.js   参考课件（5 幕：钩子→机制→3D→数据→边界）
-  scenes.gates.js        **新能力验收样本**（5 幕 / 90 秒）：quiz.at 先问后讲 +
+  scenes.gates.js        **新能力验收样本**（5 幕 / 102 秒）：quiz.at 先问后讲 +
                          draw{from,to}+hold 分段 + 每条旁白配焦点 + boundary 幕
   scenes.kvcache.js      真实文章改编（7 幕 / 158 秒）：from-md 路径跑不通时的
                          手工样本 —— 论证弧 + 四块数据画布 + 一处纠正原文的边界
   deck.html              可跑课件壳
 scripts/
   lint-scenes.mjs    静态校验（复用 validate + 源码扫非确定性）
-  verify.mjs         浏览器 31 项门禁 + 关键帧/帧序列导出
-  gate-selftest.mjs  负向测试：造坏课件，证明门禁真的会失败
+  verify.mjs         浏览器 33 项门禁 + 关键帧/帧序列导出
+  gate-selftest.mjs  负向测试：造坏课件，证明门禁真的会失败（13 个用例）
+  voiceover.mjs      铺旁白音轨：台词取自编译后的 beats + 逐句 atempo 适配声明窗口
+  fix-speak-timing.mjs  重排互相抢话的旁白时间点（只动 at 和 duration，不动一个字）
 references/
   scene-dsl.md       DSL 完整参考（元素、动作、API、ink 工具箱）
   stroke-drawing.md  「按笔画出来」模式参考：5 个 case + 设计规则 + 度量演进

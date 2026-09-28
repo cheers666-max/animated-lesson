@@ -286,6 +286,56 @@ ${extra}`,
 export const PROVENANCE = [{ claim: '负向测试夹具', source: 'scripts/gate-selftest.mjs' }];
 ${extra}`,
   },
+  {
+    name: 'speak-clash',
+    why: '两句旁白在时间轴上重叠 —— 画面看不出来，一铺音轨就是两个人同时说话',
+    expect: ['G21'],
+    file: (extra) => `export const deck = {
+  meta: { title: '负向测试：旁白抢话', theme: 'ink', oneLine: '两句话要求在同一段时间里念出来。' },
+  scenes: [{
+    id: 'bad', title: '句子排太密', duration: 14, beat: 'hook',
+    elements: [
+      { id: 'k', type: 'text', role: 'kicker', text: '负向测试', x: 6, y: 5, w: 60 },
+      { id: 't', type: 'text', role: 'title', text: '旁白窗口重叠', x: 6, y: 12, w: 80 },
+    ],
+    beats: [
+      { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.4 },
+      { at: 0.6, action: 'speak', text: '第一句有二十八个字，按每秒四点六字要念六秒多才念得完。' },
+      { at: 2.0, action: 'speak', text: '第二句在两点零秒就开口，于是两句挤在同一段时间里。' },
+    ],
+  }],
+};
+export const PROVENANCE = [{ claim: '负向测试夹具', source: 'scripts/gate-selftest.mjs' }];
+${extra}`,
+  },
+  {
+    name: 'text-tags',
+    why: '文本里的标记没被解释，原样印在画面上（用户看到的是「<br>」两个字）',
+    expect: ['G20'],
+    // 这条是**真实事故**：引擎里 renderText 用 node.textContent，而 renderList 用 innerHTML ——
+    // 同一套 DSL 两套语义。8 份课件把作者写的 <br>/<b> 原样印在了标题和注脚里，
+    // 而当时没有任何一条门禁看得见它。
+    // 这里用 `&lt;br&gt;` 复现同一个症状：作者想要换行，画面直接显示「<br>」。
+    file: (extra) => `export const deck = {
+  meta: { title: '负向测试：标记没被解释', theme: 'ink', oneLine: '作者想要换行，画面印出了 &lt;br&gt;。' },
+  scenes: [{
+    id: 'bad', title: '标记被当成了字面文字', duration: 12, beat: 'hook',
+    elements: [
+      { id: 'k', type: 'text', role: 'kicker', text: '负向测试', x: 6, y: 5, w: 60 },
+      { id: 't', type: 'text', role: 'title', text: '带宽没变，&lt;br&gt;为什么快了四倍？', x: 6, y: 12, w: 84 },
+      { id: 'n', type: 'text', role: 'body', text: '这里想要&lt;b&gt;加粗&lt;/b&gt;，结果印出了标签。', x: 6, y: 40, w: 84 },
+    ],
+    beats: [
+      { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.4 },
+      { at: 1.2, action: 'reveal', target: 'n', dur: 0.5 },
+      { at: 1.6, action: 'speak', text: '标题里的标记没有被解释成换行。' },
+      { at: 5.2, action: 'speak', text: '正文里的加粗标记也被原样印了出来。' },
+    ],
+  }],
+};
+export const PROVENANCE = [{ claim: '负向测试夹具', source: 'scripts/gate-selftest.mjs' }];
+${extra}`,
+  },
 ];
 
 const run = (cmd, args) => new Promise((res) => {

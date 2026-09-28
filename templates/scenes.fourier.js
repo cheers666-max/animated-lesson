@@ -18,7 +18,7 @@ export const deck = {
     {
       id: 'claim',
       title: '任何信号都是一堆正弦叠出来的',
-      duration: 34,
+      duration: 35.5,
 
       beat: 'hook',
 
@@ -33,7 +33,7 @@ export const deck = {
         { id: 't', group: 'head', type: 'text', role: 'title', text: '方波不是"方"的 —— 它是一堆正弦叠出来的', x: 5, y: 11, w: 66, size: 30 },
 
         // 谐波逐项叠加：淡色是每一项，亮色是它们的和，虚线是理想的方波
-        { id: 'ca', type: 'canvas2d', x: 5, y: 25, w: 66, h: 40, z: 1,
+        { id: 'ca', type: 'canvas2d', x: 5, y: 25, w: 66, h: 36, z: 1,
           data: { harmonics: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21], grow: [1.5, 17], samples: 420 },
           draw: (ctx, t, el, api) => {
             const { w, h, palette: pal, data: d, ink } = api;
@@ -87,10 +87,10 @@ export const deck = {
             ink.label(ctx, '每一条淡线 = 一个正弦项（振幅 = 4/πk）', X(0.52), mid - A - 12, { color: pal.good, font: '11px ui-monospace, monospace' });
           } },
 
-        { id: 'm1', group: 'row', type: 'metric', value: 0, unit: '%', label: '1 项 · RMS 误差', tone: 'bad', x: 5, y: 67, w: 19, decimals: 2 },
-        { id: 'm2', group: 'row', type: 'metric', value: 0, unit: '%', label: '9 项 · RMS 误差', x: 26, y: 67, w: 19, decimals: 2 },
-        { id: 'm3', group: 'row', type: 'metric', value: 0, unit: '%', label: '99 项 · RMS 误差', tone: 'good', x: 47, y: 67, w: 19, decimals: 2 },
-        { id: 'bt', type: 'text', role: 'note', text: '项数 ×99，误差 ÷25 ——<br>这就是"用正弦拼出任意形状"的代价。', x: 5, w: 66, below: 'm1', gap: 1.6 },
+        { id: 'm1', group: 'row', type: 'metric', value: 0, unit: '%', label: '1 项 · RMS 误差', tone: 'bad', x: 5, y: 62, w: 19, decimals: 2 },
+        { id: 'm2', group: 'row', type: 'metric', value: 0, unit: '%', label: '9 项 · RMS 误差', x: 26, y: 62, w: 19, decimals: 2 },
+        { id: 'm3', group: 'row', type: 'metric', value: 0, unit: '%', label: '99 项 · RMS 误差', tone: 'good', x: 47, y: 62, w: 19, decimals: 2 },
+        { id: 'bt', type: 'text', role: 'note', text: '项数 ×99，误差 ÷25 —— 这就是"用正弦拼出任意形状"的代价。', x: 5, w: 66, below: 'm1', gap: 1.6 },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: ['k', 't'], dur: 0.6 },
@@ -113,7 +113,7 @@ export const deck = {
         { at: 6.5, action: 'speak', text: '能。而且只要奇数次的谐波，振幅按四除以πk 递减。' },
         { at: 13.5, action: 'speak', text: '加到第二十一次，形状已经很方了。但它永远只是"接近"。' },
         { at: 21.5, action: 'speak', text: '一到九十九项，均方根误差从百分之二十点三降到百分之零点八。' },
-        { at: 26.5, action: 'speak', text: '项数多九十九倍，误差只降到二十五分之一 —— 收敛是慢的。' },
+        { at: 28.1, action: 'speak', text: '项数多九十九倍，误差只降到二十五分之一 —— 收敛是慢的。' },
       ],
       quiz: {
         q: '把项数从 99 继续加到 100 万，方波的跳变处会变得完全笔直吗？',
@@ -129,7 +129,7 @@ export const deck = {
     {
       id: 'mech',
       title: '怎么求每一项的系数',
-      duration: 37,
+      duration: 37.5,
 
       beat: 'mechanism',
 
@@ -206,11 +206,11 @@ export const deck = {
         { at: 23.8, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：所以系数是投影出来的，不是猜出来的。…
         { at: 25.0, action: 'pause', hint: '如果窗口长度取错，系数会怎样？' },
         { at: 0.8, action: 'speak', text: '知道了"能拆"，下一个问题是：每一项的系数怎么求？' },
-        { at: 6.0, action: 'speak', text: '做法是拿一个同频率的正弦当探针，和信号相乘再积分。' },
+        { at: 6.5, action: 'speak', text: '做法是拿一个同频率的正弦当探针，和信号相乘再积分。' },
         { at: 13.0, action: 'speak', text: '频率一样的时候，乘积恒为正，积分一路涨到零点五。' },
         { at: 19.0, action: 'speak', text: '频率不一样的时候，乘积正负抵消，积分停在零附近。' },
-        { at: 24.0, action: 'speak', text: '所以系数是投影出来的，不是猜出来的。' },
-        { at: 28.0, action: 'speak', text: '但注意：这个正交性依赖窗口长度。窗口只有一个周期时，邻近频率也会被看见。' },
+        { at: 24.5, action: 'speak', text: '所以系数是投影出来的，不是猜出来的。' },
+        { at: 28.7, action: 'speak', text: '但注意：这个正交性依赖窗口长度。窗口只有一个周期时，邻近频率也会被看见。' },
       ],
     },
 
@@ -263,7 +263,7 @@ export const deck = {
     {
       id: 'limit',
       title: '吉布斯：加项数解决不了的那个尖峰',
-      duration: 34,
+      duration: 36.5,
 
       beat: 'boundary',
 
@@ -319,10 +319,10 @@ export const deck = {
         { at: 0.8, action: 'speak', text: '现在看边界。这是方波跳变处的放大。' },
         { at: 6.0, action: 'speak', text: '亮线是九项，淡线是九百九十九项。它们在这个位置的尖峰一样高。' },
         { at: 13.0, action: 'speak', text: '多出来的项只把尖峰削窄，不把它压低。这个超调永远是跳变幅度的百分之八点九四九。' },
-        { at: 21.0, action: 'speak', text: '第二个边界更要紧：全局傅立叶只告诉你有哪些频率，不告诉你它们什么时候出现。' },
+        { at: 21.7, action: 'speak', text: '第二个边界更要紧：全局傅立叶只告诉你有哪些频率，不告诉你它们什么时候出现。' },
         { at: 26.3, action: 'dim', target: 'l', dur: 0.5 },
         { at: 26.3, action: 'spotlight', target: 'bt', dur: 0.5 },   // G16 焦点：第三，时间和频率不能同时说准：高斯窗的乘积恒…
-        { at: 26.5, action: 'speak', text: '第三，时间和频率不能同时说准：高斯窗的乘积恒等于一。' },
+        { at: 30, action: 'speak', text: '第三，时间和频率不能同时说准：高斯窗的乘积恒等于一。' },
       ],
       quiz: {
         q: '一段频率从低扫到高的"啾"声，它的全局频谱长什么样？',
@@ -379,11 +379,11 @@ for (let i = 0; i + W <= n; i += hop)
         { at: 0.8, action: 'speak', text: '所以工程上的选择很清楚。' },
         { at: 4.0, action: 'speak', text: '只关心有哪些频率，用全局 FFT 就够。' },
         { at: 9.0, action: 'speak', text: '还想知道什么时候出现，就得开窗 —— 这是 STFT。' },
-        { at: 14.0, action: 'speak', text: '频率跨度大，就用小波：窗宽本身随频率变。' },
-        { at: 19.0, action: 'speak', text: '这三个都不是谁更好，只是把同一个测不准换成不同的取舍点。' },
+        { at: 15.1, action: 'speak', text: '频率跨度大，就用小波：窗宽本身随频率变。' },
+        { at: 19.7, action: 'speak', text: '这三个都不是谁更好，只是把同一个测不准换成不同的取舍点。' },
         { at: 24.3, action: 'dim', target: 'bt', dur: 0.5 },
         { at: 24.3, action: 'spotlight', target: 'bd', dur: 0.5 },   // G16 焦点：窗宽就是那个旋钮。…
-        { at: 24.5, action: 'speak', text: '窗宽就是那个旋钮。' },
+        { at: 26, action: 'speak', text: '窗宽就是那个旋钮。' },
       ],
     },
   ],

@@ -150,7 +150,7 @@ function jsLit(v, indent = 0) {
   if (oneLine.length < 110) return `{ ${oneLine} }`;
   return `{\n${keys.map((k) => `${pad}  ${k}: ${jsLit(v[k], indent + 1)}`).join(',\n')},\n${pad}}`;
 }
-function buildScene(sec, si, srcRel, isLast) {
+function buildScene(sec, si, srcRel, isLast, boundaryIdx) {
   const body = [...sec.paras.map((p) => p.text), ...sec.bullets.map((b) => b.text), ...sec.quotes.map((q) => q.text)].join(' ');
   const nums = numbersIn(body);
   const withBase = nums.filter((n) => hasBaselineNear(body, n.idx));
@@ -275,11 +275,20 @@ function buildScene(sec, si, srcRel, isLast) {
 
   // 叙事节拍：**生成器替作者做机械判断**（位置 + 有没有边界句），
   // 语义判断（这一幕到底算 mechanism 还是 evidence）留给作者改。
+  //
+  // 踩过的坑：原来写的是「中间任何一幕只要有边界句就是 boundary」——
+  // 而 zzz 清单类文档几乎每节都带一句"注意/只在…"，于是 7 幕里 5 幕被标成 boundary，
+  // 占了 83% 时长，叙事门禁直接判「头重脚轻，观众会累」。
+  // 边界是**一幕**的职责，不是一种句子的标签 —— 所以只让其中一幕认领它。
   let beat;
   if (si === 0) beat = 'hook';
-  else if (boundaryText && !isLast) beat = 'boundary';
   else if (isLast) beat = 'payoff';
-  else if (nums.length >= 2) beat = 'evidence';
+  else if (si === boundaryIdx) beat = 'boundary';
+  else if (si === 1) beat = 'problem';
+  // "证据"看的是**有没有对比基线**，不是"有几个数字"。
+  // 第一版按数字个数判，结果清单类文档 4 幕全成了 evidence（占 67% 时长）——
+  // 而一条"140 GB"单独摆着并不构成证据，得说出它跟谁比。
+  else if (withBase.length >= 2) beat = 'evidence';
   else beat = 'mechanism';
 
   return {
@@ -294,7 +303,14 @@ const md = readFileSync(srcAbs, 'utf8');
 const srcRel = relative(ROOT, srcAbs);
 const all = parse(md);
 const sections = all.slice(0, MAX);
-const built = sections.map((s, i) => buildScene(s, i, srcRel, i === sections.length - 1));
+// 谁认领 boundary：**最后一个**（收尾之前）带边界句的中间幕 —— 边界放在结论前最自然。
+// 找不到就谁也不认领（后面的 beats 门禁会提示缺 boundary）。
+const boundaryIdx = sections.reduce((acc, s, i) => {
+  if (i === 0 || i === sections.length - 1) return acc;
+  const body = [...s.paras.map((p) => p.text), ...s.bullets.map((b) => b.text), ...s.quotes.map((q) => q.text)].join(' ');
+  return BOUNDARY.test(body) ? i : acc;
+}, -1);
+const built = sections.map((s, i) => buildScene(s, i, srcRel, i === sections.length - 1, boundaryIdx));
 
 const gaps = [];
 built.forEach((b, i) => {

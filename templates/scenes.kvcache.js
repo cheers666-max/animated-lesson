@@ -12,6 +12,16 @@
  * 幕次结构（叙事骨架）：hook → mechanism → evidence → mechanism → boundary → payoff
  */
 
+/**
+ * 中文在 `ui-monospace` 里没有字形，Chrome 会回退到中文字体 ——
+ * 而回退字形的 ascent 和主字体不一致，`textBaseline='top'` 定位就会把字顶出画布
+ * （walls 的轴标签就是这么被上边缘裁掉的）。含中文的标签一律用系统 sans。
+ */
+const CJK = /[\u3000-\u9fff\uff00-\uffef]/;
+const font = (size, text, weight) =>
+  `${weight ?? 400} ${size}px ${CJK.test(text) ? 'ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif'
+                                            : 'ui-monospace, SFMono-Regular, Menlo, monospace'}`;
+
 // ---------------------------------------------------------------- 画布：三段路
 /** 横轴对数刻度。七 GB/s 和三点三五 TB/s 画在一张线性图上，小的那两根会是零。 */
 function drawRoads(ctx, t, el, api) {
@@ -25,7 +35,7 @@ function drawRoads(ctx, t, el, api) {
   const xOf = (g) => L + ((Math.log10(g) - lo) / (hi - lo)) * (w - L - R);
 
   ctx.save();
-  ctx.font = '11px ui-monospace, monospace';
+  ctx.font = font(11, '磁盘本身');
   ctx.textBaseline = 'top';
   for (const g of D.ticks) {
     const x = xOf(g);
@@ -52,18 +62,18 @@ function drawRoads(ctx, t, el, api) {
     // 标签
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillStyle = api.palette.ink;
-    ctx.font = '600 15px ui-sans-serif, system-ui, sans-serif';
+    ctx.font = font(15, r.name, 600);
     ctx.fillText(r.name, 6, y - 6);
     ctx.globalAlpha = 0.6;
     ctx.fillStyle = api.palette.muted;
-    ctx.font = '11px ui-monospace, monospace';
+    ctx.font = font(11, r.spec);
     ctx.fillText(r.spec, 6, y + 10);
     ctx.globalAlpha = 1;
     // 数值跟着条形一起出现
     if (lp > 0.9) {
       ctx.globalAlpha = (lp - 0.9) / 0.1;
       ctx.fillStyle = api.palette.ink;
-      ctx.font = '600 13px ui-monospace, monospace';
+      ctx.font = font(13, '0/');
       ctx.textAlign = 'left';
       ctx.fillText((r.gbps >= 1000 ? (r.gbps / 1000).toFixed(2) + ' TB/s' : r.gbps + ' GB/s'), L + (x1 - L) * lp + 8, y);
       ctx.globalAlpha = 1;
@@ -82,45 +92,46 @@ function drawSplit(ctx, t, el, api) {
     { key: 'prefill', name: 'prefill', sub: D.prefill + ' 个 token', share: D.weightsGB / D.prefill, tone: 'accent', n: D.prefill },
     { key: 'decode', name: 'decode', sub: '1 个 token', share: D.weightsGB, tone: 'bad', n: 1 },
   ];
-  const L = 96, R = 210, T = 10, B = 14;
+  const L = 92, R = 214, T = 6, B = 6;
   const rowH = (h - T - B) / rows.length;
+  const barH = Math.max(30, rowH * 0.7);
 
   ctx.save();
   rows.forEach((r, i) => {
     const lp = Math.max(0, Math.min(1, (p * rows.length - i) / 0.7));
     if (lp <= 0.002) return;
-    const y = T + i * rowH + rowH * 0.5;
+    const y = T + rowH * (i + 0.5);
     const barW = w - L - R;
     // 卡车 = 一趟运的权重
     ctx.globalAlpha = 0.9;
     ctx.fillStyle = api.palette.line;
-    ctx.fillRect(L, y - 16, barW * lp, 32);
+    ctx.fillRect(L, y - barH / 2, barW * lp, barH);
     // 货物格子：prefill 画 40 格代表两千个 token，decode 只有一格
     const cells = r.n === 1 ? 1 : 40;
     const cw = (barW * lp) / cells;
     ctx.fillStyle = api.palette[r.tone];
     for (let k = 0; k < cells; k++) {
       ctx.globalAlpha = r.n === 1 ? 0.95 : 0.75;
-      ctx.fillRect(L + k * cw + 1.5, y - 12, Math.max(1, cw - 3), 24);
+      ctx.fillRect(L + k * cw + 1.5, y - barH / 2 + 4, Math.max(1, cw - 3), barH - 8);
     }
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillStyle = api.palette.ink;
-    ctx.font = '600 15px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText(r.name, 6, y - 7);
+    ctx.font = font(15, r.name, 600);
+    ctx.fillText(r.name, 6, y - 8);
     ctx.globalAlpha = 0.6;
     ctx.fillStyle = api.palette.muted;
-    ctx.font = '11px ui-monospace, monospace';
+    ctx.font = font(11, r.sub);
     ctx.fillText(r.sub, 6, y + 9);
     ctx.globalAlpha = 1;
     if (lp > 0.85) {
       ctx.globalAlpha = (lp - 0.85) / 0.15;
       ctx.fillStyle = api.palette[r.tone];
-      ctx.font = '600 17px ui-monospace, monospace';
-      ctx.fillText(r.share >= 1 ? r.share.toFixed(0) + ' GB / token' : r.share.toFixed(3) + ' GB / token', L + barW + 12, y - 8);
+      ctx.font = font(17, '0/');
+      ctx.fillText(r.share >= 1 ? r.share.toFixed(0) + ' GB / token' : r.share.toFixed(3) + ' GB / token', L + barW + 12, y - 9);
       ctx.globalAlpha = 0.7;
       ctx.fillStyle = api.palette.muted;
-      ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+      ctx.font = font(11, '独付全程运费');
       ctx.fillText(r.n === 1 ? '独付全程运费' : '摊掉 ' + D.prefill + ' 分之一', L + barW + 12, y + 11);
       ctx.globalAlpha = 1;
     }
@@ -135,49 +146,57 @@ function drawBatch(ctx, t, el, api) {
   const D = api.data;
   const p = api.state.p;
   const cols = D.batches;
-  const padX = 10, gap = 14;
+  const padX = 10, gap = 16;
   const cw = (w - padX * 2 - gap * (cols.length - 1)) / cols.length;
+  const barTop = 24, barH = 36;
+  const gTop = 76, gBot = h - 76;
 
   ctx.save();
   cols.forEach((b, ci) => {
     const x0 = padX + ci * (cw + gap);
     const lp = Math.max(0, Math.min(1, (p * cols.length - ci) / 0.8));
     if (lp <= 0.002) return;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // 权重：两栏一模一样 —— 这就是"公共财产"
     ctx.globalAlpha = 0.85;
     ctx.fillStyle = api.palette.accent;
-    ctx.fillRect(x0, 30, cw, 26);
+    ctx.fillRect(x0, barTop, cw, barH);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#07090d';
-    ctx.font = '600 12px ui-sans-serif, system-ui, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('权重 ' + D.weightGB + ' GB', x0 + cw / 2, 43);
+    ctx.font = font(13, '权重', 600);
+    ctx.fillText('权重 ' + D.weightGB + ' GB', x0 + cw / 2, barTop + barH / 2);
     ctx.globalAlpha = 0.6;
     ctx.fillStyle = api.palette.muted;
-    ctx.font = '11px ui-monospace, monospace';
-    ctx.fillText('全批共享 · 每步都读一遍', x0 + cw / 2, 66);
+    ctx.font = font(11, '全批共享');
+    ctx.fillText('全批共享 · 每步都读一遍', x0 + cw / 2, barTop + barH + 15);
     ctx.globalAlpha = 1;
-    // KV：一格一条序列
-    const cols2 = Math.min(b, 8), rows2 = Math.ceil(b / cols2);
-    const bw = (cw - (cols2 - 1) * 4) / cols2;
-    const bh = 13;
+    // KV 格子：正方形排布，铺满中部
+    const cols2 = Math.max(1, Math.round(Math.sqrt(b)));
+    const rows2 = Math.ceil(b / cols2);
+    const gx = 6, gy = 6;
+    const bw = (cw - (cols2 - 1) * gx) / cols2;
+    const bh = Math.min(120, (gBot - gTop - (rows2 - 1) * gy) / rows2);
     for (let k = 0; k < b; k++) {
-      const kx = x0 + (k % cols2) * (bw + 4);
-      const ky = 84 + Math.floor(k / cols2) * (bh + 4);
       ctx.globalAlpha = 0.25 + 0.75 * Math.min(1, (lp * b - k) / 0.4);
       ctx.fillStyle = api.palette.good;
-      ctx.fillRect(kx, ky, bw, bh);
+      ctx.fillRect(x0 + (k % cols2) * (bw + gx), gTop + Math.floor(k / cols2) * (bh + gy), bw, bh);
     }
+    // 每栏脚注
     ctx.globalAlpha = 1;
-    ctx.textAlign = 'center';
     ctx.fillStyle = api.palette.ink;
-    ctx.font = '600 16px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText('batch = ' + b, x0 + cw / 2, 14);
-    if (b > 8) {
-      ctx.globalAlpha = 0.7; ctx.fillStyle = api.palette.muted;
-      ctx.font = '11px ui-monospace, monospace';
-      ctx.fillText(b + ' 份私有 KV', x0 + cw / 2, h - 12);
-    }
+    ctx.font = font(15, '批', 600);
+    ctx.fillText('batch = ' + b, x0 + cw / 2, 11);
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = api.palette.good;
+    ctx.font = font(12, '份私有');
+    ctx.fillText(b + ' 份私有 KV', x0 + cw / 2, h - 48);
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = api.palette.muted;
+    ctx.font = font(11, '产出');
+    ctx.fillText('产出 ' + b + ' 个 token', x0 + cw / 2, h - 30);
+    ctx.globalAlpha = 0.5;
+    ctx.fillText('卡车跑的还是同一趟', x0 + cw / 2, h - 13);
+    ctx.globalAlpha = 1;
   });
   ctx.restore();
 }
@@ -188,7 +207,7 @@ function drawCurve(ctx, t, el, api) {
   const { w, h } = api;
   const D = api.data;
   const p = api.state.p;
-  const L = 54, R = 58, T = 16, B = 30;
+  const L = 54, R = 58, T = 24, B = 30;
   const xs = D.curve.map((d) => d.b);
   const X = (b) => L + (b / D.maxBatch) * (w - L - R);
   const msMax = Math.max(...D.curve.map((d) => d.ms)) * 1.25;
@@ -201,20 +220,20 @@ function drawCurve(ctx, t, el, api) {
   ctx.globalAlpha = 0.35; ctx.strokeStyle = api.palette.line; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, h - B); ctx.lineTo(w - R + 10, h - B); ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.font = '11px ui-monospace, monospace'; ctx.textBaseline = 'top';
+  ctx.font = font(11, '标签'); ctx.textBaseline = 'top';
   ctx.fillStyle = api.palette.muted;
   for (const b of xs) { ctx.textAlign = 'center'; ctx.fillText(String(b), X(b), h - B + 6); }
   ctx.textAlign = 'left';
   ctx.fillText('batch →', L, h - B + 18);
-  ctx.fillStyle = api.palette.bad; ctx.fillText('每 token 延迟 ms', L, 1);
-  ctx.fillStyle = api.palette.good; ctx.textAlign = 'right'; ctx.fillText('吞吐 token/s', w - R + 10, 1);
+  ctx.fillStyle = api.palette.bad; ctx.fillText('每 token 延迟 ms', L, 3);
+  ctx.fillStyle = api.palette.good; ctx.textAlign = 'right'; ctx.fillText('吞吐 token/s', w - R + 10, 3);
 
   // 显存墙
   const wallX = X(D.maxBatch);
   ctx.globalAlpha = 0.7; ctx.strokeStyle = api.palette['accent-2']; ctx.setLineDash([5, 4]);
   ctx.beginPath(); ctx.moveTo(wallX, T); ctx.lineTo(wallX, h - B); ctx.stroke(); ctx.setLineDash([]);
   ctx.globalAlpha = 0.85; ctx.fillStyle = api.palette['accent-2'];
-  ctx.font = '11px ui-monospace, monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  ctx.font = font(11, '显存墙'); ctx.textAlign = 'right'; ctx.textBaseline = 'top';
   ctx.fillText('显存墙 ' + D.maxBatch + ' 条', wallX - 6, T + 4);
 
   // 两条线，按 p 从左往右长出来
@@ -239,7 +258,7 @@ function drawCurve(ctx, t, el, api) {
   const lastP = D.curve[D.curve.length - 1];
   if (p > 0.94) {
     ctx.globalAlpha = (p - 0.94) / 0.06;
-    ctx.font = '600 12px ui-monospace, monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = font(12, '0/', 600); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillStyle = api.palette.bad; ctx.fillText(lastP.ms.toFixed(1) + ' ms', X(lastP.b) - 52, Y1(lastP.ms) - 12);
     ctx.fillStyle = api.palette.good; ctx.fillText(lastP.tps.toFixed(0) + ' /s', X(lastP.b) - 52, Y2(lastP.tps) + 13);
     ctx.globalAlpha = 1;
@@ -254,82 +273,111 @@ function drawKV(ctx, t, el, api) {
   const D = api.data;
   const p = api.state.p;
   const T = D.tokens;
-  const done = p * T;                       // 已经生成到第几个 token
-  const L = 12, splitX = Math.round(w * 0.6);
-  const barTop = 34, barH = 62;
-  const bw = (splitX - L - 34) / T;
+  const done = p * T;
+  const L = 12;
+  const splitX = Math.round(w * 0.42);
+  const barTop = 32;
+  const rowH = (h - barTop - 14) / 2;
+  const h1 = rowH - 16;
+  const bw = (splitX - L - 26) / T;
 
   ctx.save();
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  ctx.font = '600 13px ui-sans-serif, system-ui, sans-serif';
 
-  // ── 上排：没有缓存 —— 第 i 步要重算前 i 个的 K、V，总工作量 ∝ T²
+  // 上排：没有缓存 —— 第 i 步重算前 i 个，总工作量 ∝ T²
   ctx.fillStyle = api.palette.bad;
+  ctx.font = font(13, '没有缓存', 600);
   ctx.fillText('没有缓存', L, 12);
-  ctx.globalAlpha = 0.6; ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-  ctx.fillStyle = api.palette.muted;
-  ctx.fillText('第 i 步把前面 i 个的 K、V 全部重算 —— 跟 T² 成正比', L + 66, 12);
+  ctx.globalAlpha = 0.62; ctx.fillStyle = api.palette.muted;
+  ctx.font = font(11, '重算');
+  ctx.fillText('前 i 个的 K、V 全部重算 —— 与 T² 成正比', L + 64, 12);
   for (let i = 0; i < T; i++) {
     const a = Math.max(0, Math.min(1, done - i));
     if (a <= 0.001) continue;
-    const bh = (barH * (i + 1)) / T;
+    const bh = (h1 * (i + 1)) / T;
     ctx.globalAlpha = 0.28 + 0.72 * a;
     ctx.fillStyle = api.palette.bad;
-    ctx.fillRect(L + i * bw, barTop + barH - bh, bw - 2, bh);
+    ctx.fillRect(L + i * bw, barTop + h1 - bh, bw - 2, bh);
   }
   ctx.globalAlpha = 1;
 
-  // ── 下排：有缓存 —— 每步只算自己，高度恒定，总工作量 ∝ T
+  // 下排：有缓存 —— 每步只算自己，高度恒定，总工作量 ∝ T
+  const y2 = barTop + rowH;
   ctx.fillStyle = api.palette.good;
-  ctx.font = '600 13px ui-sans-serif, system-ui, sans-serif';
-  ctx.fillText('有缓存', L, barTop + barH + 22);
-  ctx.globalAlpha = 0.6; ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-  ctx.fillStyle = api.palette.muted;
-  ctx.fillText('每步只算自己那一个 —— 线性', L + 52, barTop + barH + 22);
-  const b2 = barTop + barH + 32;
+  ctx.font = font(13, '有缓存', 600);
+  ctx.fillText('有缓存', L, y2 + 12);
+  ctx.globalAlpha = 0.62; ctx.fillStyle = api.palette.muted;
+  ctx.font = font(11, '只算自己');
+  ctx.fillText('每步只算自己那一个 —— 与 T 成正比', L + 52, y2 + 12);
   for (let i = 0; i < T; i++) {
     const a = Math.max(0, Math.min(1, done - i));
     if (a <= 0.001) continue;
     ctx.globalAlpha = 0.28 + 0.72 * a;
     ctx.fillStyle = api.palette.good;
-    ctx.fillRect(L + i * bw, b2 + barH - 10, bw - 2, 10);
+    ctx.fillRect(L + i * bw, y2 + 40, bw - 2, h1 * 0.52);
   }
   ctx.globalAlpha = 1;
 
-  // ── 右边：KV 仓库 —— 每个 token 存一行，两列（K 和 V）
-  const sx = splitX + 20;
-  ctx.font = '600 12px ui-sans-serif, system-ui, sans-serif';
+  // 右边：KV 仓库（每个 token 一行，K / V 两列）
+  const sx = splitX + 18;
+  ctx.font = font(14, 'KV 仓库', 600);
   ctx.fillStyle = api.palette.ink;
   ctx.fillText('KV 仓库', sx, 12);
-  ctx.globalAlpha = 0.6; ctx.font = '11px ui-monospace, monospace';
-  ctx.fillStyle = api.palette.muted;
-  ctx.fillText(D.layers + ' 层 × ' + D.kvHeads + ' KV头 × ' + D.headDim + ' 维', sx, 28);
-
-  const rh = Math.max(6, Math.min(16, (h - 56) / T));
-  const cw = Math.min(34, (w - sx - 14) / 2);
+  ctx.globalAlpha = 0.62; ctx.fillStyle = api.palette.muted;
+  ctx.font = font(11, '维度');
+  ctx.fillText(D.layers + ' 层 × ' + D.kvHeads + ' KV头 × ' + D.headDim + ' 维', sx, 30);
+  const gTop = 46, gBot = h - 16;
+  const cw = 62;
+  const rh = Math.max(8, Math.min(15, (gBot - gTop - (T - 1) * 3) / T));
   for (let i = 0; i < T; i++) {
     const a = Math.max(0, Math.min(1, done - i));
     if (a <= 0.001) continue;
+    const y = gTop + i * (rh + 3);
     ctx.globalAlpha = 0.35 + 0.65 * a;
     ctx.fillStyle = api.palette.accent;
-    ctx.fillRect(sx, 40 + i * (rh + 2), cw, rh);
+    ctx.fillRect(sx, y, cw, rh);
     ctx.fillStyle = api.palette['accent-2'];
-    ctx.fillRect(sx + cw + 4, 40 + i * (rh + 2), cw, rh);
+    ctx.fillRect(sx + cw + 4, y, cw, rh);
   }
-  ctx.globalAlpha = 0.85;
-  ctx.fillStyle = api.palette.muted; ctx.font = '10px ui-monospace, monospace';
-  ctx.fillText('K', sx + cw / 2 - 3, 40 + T * (rh + 2) + 4);
-  ctx.fillText('V', sx + cw + 4 + cw / 2 - 3, 40 + T * (rh + 2) + 4);
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = api.palette.muted; ctx.font = font(10, 'KV');
+  ctx.fillText('K', sx + cw / 2 - 4, gTop + T * (rh + 3) + 2);
+  ctx.fillText('V', sx + cw + 6 + cw / 2 - 4, gTop + T * (rh + 3) + 2);
   ctx.globalAlpha = 1;
 
-  // 读数：p 走完才给，避免"还没算完就报数"
-  if (p > 0.92) {
-    ctx.globalAlpha = (p - 0.92) / 0.08;
-    ctx.fillStyle = api.palette.ink; ctx.font = '600 12px ui-monospace, monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('2 × ' + D.layers + ' × ' + D.kvHeads + ' × ' + D.headDim + ' × ' + D.bytes + ' B', sx, h - 20);
+  // 公式：六项都是事实，连乘
+  const fx = sx + cw * 2 + 46;
+  ctx.fillStyle = api.palette.ink;
+  ctx.font = font(13, '公式', 600);
+  ctx.fillText('公式里六项，每一项都是一个事实', fx, 12);
+  const terms = [
+    ['2', 'K 和 V 是两种向量，所以要乘二'],
+    [String(D.layers), '每一层注意力都要存自己的一份'],
+    [String(D.kvHeads), 'KV 头 —— GQA 把 64 个头压到 8 个'],
+    [String(D.headDim), '每个头的维度，决定一个向量多大'],
+    [D.bytes + ' B', 'fp16 一个数占两个字节'],
+  ];
+  terms.forEach(([num, why], i) => {
+    const y = 44 + i * 32;
+    ctx.globalAlpha = 0.55 + 0.45 * Math.min(1, p * 2);
     ctx.fillStyle = api.palette['accent-2'];
-    ctx.fillText('= ' + D.perTokenMiB.toFixed(3) + ' MiB / token', sx, h - 6);
+    ctx.font = font(15, num, 600);
+    ctx.fillText((i ? '× ' : '') + num, fx, y);
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = api.palette.muted;
+    ctx.font = font(12, why);
+    ctx.fillText(why, fx + 44, y);
+  });
+  ctx.globalAlpha = 1;
+  if (p > 0.85) {
+    ctx.globalAlpha = (p - 0.85) / 0.15;
+    ctx.fillStyle = api.palette.good;
+    ctx.font = font(16, 'MiB', 600);
+    ctx.fillText('= ' + D.perTokenMiB.toFixed(3) + ' MiB / token', fx, 44 + 5 * 32);
+    ctx.globalAlpha = 0.72;
+    ctx.fillStyle = api.palette.muted;
+    ctx.font = font(12, '序列');
+    ctx.fillText('一条 4096 token 的序列 = 1.25 GB，是权重的百分之一 —— 但一百条同时跑就反超权重', fx, 44 + 5 * 32 + 26);
     ctx.globalAlpha = 1;
   }
   ctx.restore();
@@ -368,7 +416,7 @@ export const deck = {
         { at: 3.8, action: 'spotlight', target: 'm2', dur: 0.4 },
         { at: 3.8, action: 'dim', target: 'm1', dur: 0.4 },
         { at: 0.6, action: 'speak', text: '把模型从 fp16 量化成 INT4，每一步解码快了四倍。' },
-        { at: 6.2, action: 'speak', text: '可是路的带宽，一根汗毛都没有动。' },
+        { at: 7.2, action: 'speak', text: '可是路的带宽，一根汗毛都没有动。' },
         // ↓ 先问后讲：题目在幕中间，答案在题目之后
         { at: 11.8, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 11.8, action: 'spotlight', target: 'q', dur: 0.5 },
@@ -459,7 +507,7 @@ export const deck = {
         { at: 15.2, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 15.2, action: 'spotlight', target: 'q', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '一次对话进来两千个 token，一百四十 GB 权重运一趟。' },
-        { at: 6.4, action: 'speak', text: '两千份计算摊这一趟运费，每份只摊到零点零七 GB。' },
+        { at: 7.4, action: 'speak', text: '两千份计算摊这一趟运费，每份只摊到零点零七 GB。' },
         { at: 13.2, action: 'speak', text: '然后开始往外吐字，一次只吐一个。为了这一个，权重还要完整运一趟。' },
       ],
     },
@@ -493,8 +541,8 @@ export const deck = {
         { at: 12.4, action: 'spotlight', target: 'q', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '上面这一排，是每生成一个字就把历史重算一遍。' },
         { at: 7.2, action: 'speak', text: '下面这一排是存下来。仓库换来的是卡车不用反复跑。' },
-        { at: 9.2, action: 'speak', text: '乘二是因为 K 和 V 是两种向量，乘层数是因为每层都要存自己的。' },
-        { at: 15.0, action: 'speak', text: '六个事实连乘，仅此而已。' },
+        { at: 12.7, action: 'speak', text: '乘二是因为 K 和 V 是两种向量，乘层数是因为每层都要存自己的。' },
+        { at: 20.1, action: 'speak', text: '六个事实连乘，仅此而已。' },
       ],
     },
 
@@ -527,7 +575,7 @@ export const deck = {
         { at: 15.6, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 15.6, action: 'spotlight', target: 'q', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '十六个朋友，每个人都要同一个一百四十 GB 的文件。' },
-        { at: 6.4, action: 'speak', text: '下载一次，十六个人同时用。流量没变，每个人拿到的时间也没变。' },
+        { at: 6.5, action: 'speak', text: '下载一次，十六个人同时用。流量没变，每个人拿到的时间也没变。' },
         { at: 13.6, action: 'speak', text: '这就是 batching。因为大头是共享的，只有小头各自私有。' },
       ],
     },
@@ -605,10 +653,10 @@ export const deck = {
         { at: 6.4, action: 'reveal', target: 'q', dur: 0.7 },
         { at: 6.4, action: 'spotlight', target: 'q', dur: 0.5 },
         { at: 6.4, action: 'dim', target: 'l', dur: 0.5 },
-        { at: 6.6, action: 'speak', text: '带宽动不了。所有优化，都在折腾货量。' },
+        { at: 7.8, action: 'speak', text: '带宽动不了。所有优化，都在折腾货量。' },
         { at: 11.0, action: 'reveal', target: 'b', dur: 0.6 },
         { at: 11.0, action: 'spotlight', target: 'b', dur: 0.4 },
-        { at: 11.2, action: 'speak', text: '被讨厌的从来不是算法。是被要求在没有画面的情况下假装理解。' },
+        { at: 12, action: 'speak', text: '被讨厌的从来不是算法。是被要求在没有画面的情况下假装理解。' },
       ],
     },
   ],

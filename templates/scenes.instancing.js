@@ -90,7 +90,7 @@ export const deck = {
     {
       id: 'hook',
       title: '同一份数据，差 3.4 倍',
-      duration: 13,
+      duration: 16,
 
       beat: 'hook',
 
@@ -100,7 +100,8 @@ export const deck = {
         { id: 'n-obj', type: 'metric', value: 0, suffix: '', label: '场景里的物体数', x: 8, y: 54, w: 24, decimals: 0 },
         { id: 'n-speed', type: 'metric', value: 0, unit: '×', label: 'CPU 帧时间差', tone: 'good', x: 40, y: 54, w: 24, decimals: 1 },
         { id: 'todo', type: 'text', role: 'body', text: '同样的顶点、同样的材质、同样的 GPU。<br>变的只有一件事 —— 先猜猜是哪一件。', x: 8, y: 80, w: 56 },
-        { id: 'mark', type: 'annot', kind: 'underline', text: '只改这一层', x: 7.2, y: 27.5, w: 12, h: 10 },
+        // overlapOk：annot 天然要压在被标注的标题上 —— 这正是这个标志存在的意义（校验器会提示）
+        { id: 'mark', type: 'annot', kind: 'underline', text: '只改这一层', x: 7.6, y: 31, w: 27, h: 10, overlapOk: true },
       ],
       beats: [
         { at: 0.3, action: 'reveal', target: 'kicker', dur: 0.4 },
@@ -116,7 +117,7 @@ export const deck = {
         { at: 6.4, action: 'countUp', target: 'n-speed', from: 0, to: 3.4, dur: 1.0 },
         { at: 6.4, action: 'spotlight', target: 'n-speed', dur: 0.5 },
         { at: 6.4, action: 'dim', target: 'n-obj', dur: 0.5 },
-        { at: 6.8, action: 'speak', text: '瓶颈在 CPU：两万次命令提交，帧时间差了三点四倍。' },
+        { at: 9.7, action: 'speak', text: '瓶颈在 CPU：两万次命令提交，帧时间差了三点四倍。' },
       ],
       quiz: {
         at: 5.6,
@@ -133,7 +134,7 @@ export const deck = {
     {
       id: 'mechanism',
       title: '逐次提交 vs 一次提交',
-      duration: 20,
+      duration: 30,
 
       beat: 'mechanism',
 
@@ -166,10 +167,10 @@ export const deck = {
         { at: 12.6, action: 'reveal', target: 'note', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '先看左边。每个物体单独提交一次，计数器一路涨到两万。' },
         { at: 6.6, action: 'speak', text: '每一次提交都要付一遍跨语言调用的固定开销，累计三点八毫秒。' },
-        { at: 9.0, action: 'speak', text: '再看右边。同一批物体，一次提交，CPU 只调用一次。' },
-        { at: 12.0, action: 'speak', text: '一点一毫秒。两边的点阵完全相同，提交的是同一批物体。' },
+        { at: 13.2, action: 'speak', text: '再看右边。同一批物体，一次提交，CPU 只调用一次。' },
+        { at: 19.1, action: 'speak', text: '一点一毫秒。两边的点阵完全相同，提交的是同一批物体。' },
         { at: 15.0, action: 'wait', dur: 2 },
-        { at: 15.4, action: 'speak', text: '省下来的不是算力，是两万次函数调用。' },
+        { at: 25, action: 'speak', text: '省下来的不是算力，是两万次函数调用。' },
         { at: 19.0, action: 'spotlight', target: 'note', dur: 0.4 },
       ],
     },
@@ -178,7 +179,7 @@ export const deck = {
     {
       id: 'three',
       title: '在 3D 里看同一件事',
-      duration: 25,
+      duration: 26,
 
       beat: 'mechanism',
 
@@ -264,7 +265,7 @@ export const deck = {
         { at: 11.0, action: 'speak', text: '再看实例化：整批一次提交，GPU 仍然要画所有这些方块，但 CPU 只调用一次。' },
         { at: 18.6, action: 'dim', target: 'cnt', dur: 0.5 },
         { at: 18.6, action: 'spotlight', target: 'cap', dur: 0.5 },   // G16 焦点：GPU 从头到尾都在正常干活。忙的一直是 C…
-        { at: 18.8, action: 'speak', text: 'GPU 从头到尾都在正常干活。忙的一直是 CPU。' },
+        { at: 19.9, action: 'speak', text: 'GPU 从头到尾都在正常干活。忙的一直是 CPU。' },
       ],
     },
 
@@ -272,7 +273,7 @@ export const deck = {
     {
       id: 'numbers',
       title: '不是线性收益，有拐点',
-      duration: 18,
+      duration: 20.5,
 
       beat: 'evidence',
 
@@ -309,8 +310,8 @@ export const deck = {
         { at: 0.6, action: 'speak', text: '四个规模，四组实测。五百个物体只快两倍出头，省下的绝对值小到可以忽略。' },
         { at: 7.6, action: 'dim', target: 'chart', dur: 0.5 },
         { at: 7.6, action: 'spotlight', target: 'src', dur: 0.5 },   // G16 焦点：两千到两万，加速比稳定在三倍以上。省下的是固…
-        { at: 7.8, action: 'speak', text: '两千到两万，加速比稳定在三倍以上。省下的是固定开销乘次数。' },
-        { at: 12.0, action: 'speak', text: '次数少的时候，这笔钱不值得你为此重构代码。' },
+        { at: 8.5, action: 'speak', text: '两千到两万，加速比稳定在三倍以上。省下的是固定开销乘次数。' },
+        { at: 15.1, action: 'speak', text: '次数少的时候，这笔钱不值得你为此重构代码。' },
       ],
     },
 
@@ -318,7 +319,7 @@ export const deck = {
     {
       id: 'boundary',
       title: '别搞错优化对象',
-      duration: 16,
+      duration: 19.5,
 
       beat: 'boundary',
 
@@ -347,8 +348,8 @@ export const deck = {
         { at: 0.5, action: 'speak', text: '注意：GPU 时间从零点一九到一点八五毫秒，两边随规模同步增长。' },
         { at: 6.4, action: 'dim', target: 'm1', dur: 0.5 },
         { at: 6.4, action: 'spotlight', target: 'quizhint', dur: 0.5 },   // G16 焦点：所以这是一次纯 CPU 侧的优化。判断方向看…
-        { at: 6.6, action: 'speak', text: '所以这是一次纯 CPU 侧的优化。判断方向看谁更接近帧预算。' },
-        { at: 11.0, action: 'speak', text: '总绘制数少于两千的时候，别为它重构。' },
+        { at: 7.7, action: 'speak', text: '所以这是一次纯 CPU 侧的优化。判断方向看谁更接近帧预算。' },
+        { at: 14.5, action: 'speak', text: '总绘制数少于两千的时候，别为它重构。' },
       ],
       quiz: {
         q: '你的场景每帧 300 次 draw，cpu/frame 是 0.4ms，gpu/frame 是 9ms。该做 instancing 吗？',

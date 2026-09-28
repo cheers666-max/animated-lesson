@@ -10,7 +10,7 @@ export const deck = {
     {
       id: 'hook',
       title: '一次 createBindGroup 值多少钱',
-      duration: 18,
+      duration: 23.5,
 
       beat: 'hook',
 
@@ -29,15 +29,15 @@ export const deck = {
         { at: 1.0, action: 'countUp', target: 'm3', from: 0, to: 1.2, dur: 1.0 },
         { at: 2.4, action: 'reveal', target: 's', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '先给单价：一次 createBindGroup 大约一点二微秒。' },
-        { at: 3.0, action: 'speak', text: '一帧要建两万个。乘起来是多少？一帧预算只有十六毫秒。' },
+        { at: 7.8, action: 'speak', text: '一帧要建两万个。乘起来是多少？一帧预算只有十六毫秒。' },
         // ↓ 答案在题之后
         { at: 8.6, action: 'reveal', target: ['m1', 'm2'], dur: 0.5 },
         { at: 8.8, action: 'countUp', target: 'm1', from: 0, to: 24.36, dur: 1.6 },
         { at: 10.8, action: 'countUp', target: 'm2', from: 0, to: 2.04, dur: 1.2, ease: 'out' },
         { at: 8.8, action: 'spotlight', target: 'm1', dur: 0.5 },
         { at: 8.8, action: 'dim', target: 'm3', dur: 0.5 },
-        { at: 11.0, action: 'speak', text: '二十四毫秒，光是建绑定对象就超了一帧预算。' },
-        { at: 13.4, action: 'speak', text: '缓存之后是两点零四毫秒 —— 差十二倍。' },
+        { at: 13.7, action: 'speak', text: '二十四毫秒，光是建绑定对象就超了一帧预算。' },
+        { at: 18.5, action: 'speak', text: '缓存之后是两点零四毫秒 —— 差十二倍。' },
       ],
       quiz: {
         at: 8.0,
@@ -52,7 +52,7 @@ export const deck = {
     {
       id: 'strategies',
       title: '三种缓存策略',
-      duration: 18,
+      duration: 23.5,
 
       beat: 'mechanism',
 
@@ -80,15 +80,15 @@ export const deck = {
         { at: 4.6, action: 'reveal', target: 'w', dur: 0.6 },
         { at: 6.0, action: 'spotlight', target: 'l', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '三种策略，三步走。第一步按材质分桶，绑定对象只建一次。' },
-        { at: 5.6, action: 'speak', text: '第二步用动态偏移，把变化的偏移塞进 uniform buffer。' },
-        { at: 10.0, action: 'speak', text: '第三步顺手把偏移一次写完，只发一次提交。三者可以叠加。' },
-        { at: 14.4, action: 'speak', text: '最后落到两点零四毫秒。' },
+        { at: 6.7, action: 'speak', text: '第二步用动态偏移，把变化的偏移塞进 uniform buffer。' },
+        { at: 14.1, action: 'speak', text: '第三步顺手把偏移一次写完，只发一次提交。三者可以叠加。' },
+        { at: 20.2, action: 'speak', text: '最后落到两点零四毫秒。' },
       ],
     },
     {
       id: 'boundary',
       title: '什么时候不值得',
-      duration: 16,
+      duration: 19,
 
       beat: 'boundary',
 
@@ -106,8 +106,8 @@ export const deck = {
         { at: 0.9, action: 'reveal', target: 'l', dur: 0.8 },
         { at: 3.0, action: 'reveal', target: 'q', dur: 0.6 },
         { at: 0.6, action: 'speak', text: '但二十四毫秒是极端值。多数场景每帧只有几十次绑定。' },
-        { at: 5.0, action: 'speak', text: '绑定数少于两百时，重建开销通常在零点三毫秒以内。' },
-        { at: 8.6, action: 'speak', text: '缓存会引入状态失效这一整类 bug。收益不到一毫秒，别换。' },
+        { at: 6.3, action: 'speak', text: '绑定数少于两百时，重建开销通常在零点三毫秒以内。' },
+        { at: 11.8, action: 'speak', text: '缓存会引入状态失效这一整类 bug。收益不到一毫秒，别换。' },
       ],
     },
   ],

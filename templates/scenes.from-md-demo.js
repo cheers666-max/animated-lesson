@@ -137,7 +137,7 @@ export const deck = {
       id: 'a-先修测量-不做这步-后面全是猜',
       title: 'A. 先修测量（不做这步，后面全是猜）',
       duration: 39,
-      beat: 'boundary',
+      beat: 'problem',
       elements: [
         {
           id: "k",
@@ -264,7 +264,7 @@ export const deck = {
       id: 'b-每帧的-cpu-侧-最容易拿到大倍数的地',
       title: 'B. 每帧的 CPU 侧（最容易拿到大倍数的地方）',
       duration: 40,
-      beat: 'boundary',
+      beat: 'evidence',
       elements: [
         {
           id: "k",
@@ -391,7 +391,7 @@ export const deck = {
       id: 'c-gpu-侧-带宽',
       title: 'C. GPU 侧 / 带宽',
       duration: 39,
-      beat: 'boundary',
+      beat: 'evidence',
       elements: [
         {
           id: "k",
@@ -517,7 +517,7 @@ export const deck = {
       id: 'd-能力面-兼容性',
       title: 'D. 能力面 / 兼容性',
       duration: 39,
-      beat: 'boundary',
+      beat: 'mechanism',
       elements: [
         {
           id: "k",

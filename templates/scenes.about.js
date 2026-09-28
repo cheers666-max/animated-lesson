@@ -272,7 +272,7 @@ export const deck = {
     {
       id: 'bg',
       title: '为什么是现在',
-      duration: 30,
+      duration: 42.5,
 
       beat: 'hook',
 
@@ -316,18 +316,18 @@ export const deck = {
         { at: 17.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：三件事第一次同时成立，门槛就从会做动画，降到…
         { at: 20.5, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '先看时间。Chrome 在 2023 年 5 月就发了 WebGPU 的正式版。' },
-        { at: 5.6, action: 'speak', text: 'Safari 要等到 2025 年 9 月的 26.0 —— 中间差了两年四个月。' },
-        { at: 11.4, action: 'speak', text: '在这两年里，另外两件事也到位了：三维库变成一个 CDN 链接，而模型学会了写代码。' },
-        { at: 18.0, action: 'speak', text: '三件事第一次同时成立，门槛就从会做动画，降到了会描述过程。' },
+        { at: 9.5, action: 'speak', text: 'Safari 要等到 2025 年 9 月的 26.0 —— 中间差了两年四个月。' },
+        { at: 18.7, action: 'speak', text: '在这两年里，另外两件事也到位了：三维库变成一个 CDN 链接，而模型学会了写代码。' },
+        { at: 27.9, action: 'speak', text: '三件事第一次同时成立，门槛就从会做动画，降到了会描述过程。' },
         { at: 21.8, action: 'dim', target: 'q', dur: 0.5 },
         { at: 21.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：但要记住边界：Safari 只在 macOS…
-        { at: 22.0, action: 'speak', text: '但要记住边界：Safari 只在 macOS 26 之后默认开启。' },
+        { at: 34.5, action: 'speak', text: '但要记住边界：Safari 只在 macOS 26 之后默认开启。' },
       ],
     },
     {
       id: 'problem',
       title: 'PPT 的三个结构性缺陷',
-      duration: 31,
+      duration: 32,
 
       beat: 'problem',
 
@@ -362,12 +362,12 @@ export const deck = {
         { at: 17.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：而且好坏只能靠肉眼：改一版，你说不出是好了还…
         { at: 22.0, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: 'PPT 的问题不是不好看，是结构性的。' },
-        { at: 4.6, action: 'speak', text: '同一件事，静态一页只能给一个信息单元；按构造顺序讲，是十二步。' },
-        { at: 11.0, action: 'speak', text: '时间维度被丢掉了，观众要自己把这十二步的顺序脑补出来。' },
-        { at: 18.0, action: 'speak', text: '而且好坏只能靠肉眼：改一版，你说不出是好了还是坏了。' },
+        { at: 5, action: 'speak', text: '同一件事，静态一页只能给一个信息单元；按构造顺序讲，是十二步。' },
+        { at: 12, action: 'speak', text: '时间维度被丢掉了，观众要自己把这十二步的顺序脑补出来。' },
+        { at: 18.1, action: 'speak', text: '而且好坏只能靠肉眼：改一版，你说不出是好了还是坏了。' },
         { at: 22.8, action: 'dim', target: 'q', dur: 0.5 },
         { at: 22.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：但要公平：如果信息本来就是并列的，这个差距就…
-        { at: 23.0, action: 'speak', text: '但要公平：如果信息本来就是并列的，这个差距就是零，静态反而更快。' },
+        { at: 24, action: 'speak', text: '但要公平：如果信息本来就是并列的，这个差距就是零，静态反而更快。' },
         { at: 26.5, action: 'pause', hint: '你最近一次讲的东西，有顺序吗？' },
       ],
       quiz: {
@@ -383,7 +383,7 @@ export const deck = {
     {
       id: 'determinism',
       title: '优势一：确定性时间轴',
-      duration: 22,
+      duration: 26.5,
 
       beat: 'mechanism',
 
@@ -418,7 +418,7 @@ export const deck = {
         { at: 12.4, action: 'speak', text: '所以可以拖动、可以断言、可以逐帧导出，评审时人人看到一样的东西。' },
         { at: 15.8, action: 'dim', target: 'm', dur: 0.5 },
         { at: 15.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：代价是：不能用时间戳做淡入，也不能靠物理引擎…
-        { at: 16.0, action: 'speak', text: '代价是：不能用时间戳做淡入，也不能靠物理引擎的累积状态。' },
+        { at: 19.6, action: 'speak', text: '代价是：不能用时间戳做淡入，也不能靠物理引擎的累积状态。' },
       ],
     },
 
@@ -426,7 +426,7 @@ export const deck = {
     {
       id: 'process',
       title: '优势二：过程可见，注意力可控',
-      duration: 30,
+      duration: 34.5,
 
       beat: 'mechanism',
 
@@ -464,8 +464,8 @@ export const deck = {
         { at: 4.2, action: 'speak', text: '一笔一笔画出来，构造的顺序本身就变成了知识。' },
         { at: 9.6, action: 'speak', text: '注意力也能控制：聚光、压暗、数字长出来、图表按数据长大。' },
         { at: 18.2, action: 'speak', text: '还有一条纪律：每半秒最多释放三个信息单元。' },
-        { at: 21.0, action: 'speak', text: '一页塞八个要点同时弹出，超了八倍，观众一个都记不住。' },
-        { at: 24.0, action: 'speak', text: '边界是：逐笔超过八秒还没画完，观众就开始等了。' },
+        { at: 23, action: 'speak', text: '一页塞八个要点同时弹出，超了八倍，观众一个都记不住。' },
+        { at: 28.9, action: 'speak', text: '边界是：逐笔超过八秒还没画完，观众就开始等了。' },
       ],
     },
 
@@ -473,7 +473,7 @@ export const deck = {
     {
       id: 'verify',
       title: '优势三：质量可以被断言',
-      duration: 34,
+      duration: 37,
 
       beat: 'mechanism',
 
@@ -508,10 +508,10 @@ export const deck = {
         { at: 23.0, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.6, action: 'speak', text: '第三个优势最有意思：质量第一次可以被断言。' },
         { at: 5.4, action: 'speak', text: '十六项门禁在真浏览器里跑，每一幕都要拿出证据。' },
-        { at: 9.0, action: 'speak', text: '同一时刻渲染两次必须逐字节相同，画好的笔画不许被擦掉。' },
+        { at: 10.6, action: 'speak', text: '同一时刻渲染两次必须逐字节相同，画好的笔画不许被擦掉。' },
         { at: 18.0, action: 'speak', text: '它们真的抓到过笔尖啪地消失，抓到过四个元素同时弹出。' },
-        { at: 22.6, action: 'speak', text: '门禁不只是防回归，它能让作者发现自己看不见的问题。' },
-        { at: 25.0, action: 'speak', text: '但要小心：度量本身会骗人。笔画长度这个指标我改了三版才正确。' },
+        { at: 23.9, action: 'speak', text: '门禁不只是防回归，它能让作者发现自己看不见的问题。' },
+        { at: 29.6, action: 'speak', text: '但要小心：度量本身会骗人。笔画长度这个指标我改了三版才正确。' },
       ],
     },
 
@@ -519,7 +519,7 @@ export const deck = {
     {
       id: 'scenes',
       title: '什么时候用，什么时候不用',
-      duration: 26,
+      duration: 27.5,
 
       beat: 'boundary',
 
@@ -553,7 +553,7 @@ export const deck = {
         { at: 15.8, action: 'dim', target: 'cb', dur: 0.5 },
         { at: 15.8, action: 'spotlight', target: 'q', dur: 0.5 },   // G16 焦点：判据只有一条：信息里有没有顺序。有顺序就逐笔…
         { at: 16.0, action: 'speak', text: '判据只有一条：信息里有没有顺序。有顺序就逐笔，只是并列就一次给完。' },
-        { at: 22.6, action: 'speak', text: '逐笔的价值是顺序，不是动起来。' },
+        { at: 23.4, action: 'speak', text: '逐笔的价值是顺序，不是动起来。' },
       ],
     },
 
@@ -561,7 +561,7 @@ export const deck = {
     {
       id: 'who',
       title: '四类人，四种用法',
-      duration: 35,
+      duration: 36,
 
       beat: 'payoff',
 
@@ -594,11 +594,11 @@ export const deck = {
         { at: 28.5, action: 'reveal', target: 'b', dur: 0.5 },
         { at: 0.7, action: 'speak', text: '四类人最适合用它。工程师做技术分享，讲机制和性能拐点。' },
         { at: 7.0, action: 'speak', text: '老师和课程作者，讲构造过程 —— 比如一条曲线是怎么被算出来的。' },
-        { at: 13.6, action: 'speak', text: '产品和架构设计者，讲架构怎么一步步演进过来。' },
+        { at: 14.2, action: 'speak', text: '产品和架构设计者，讲架构怎么一步步演进过来。' },
         { at: 20.0, action: 'speak', text: '还有做 agent 的人：让 agent 汇报它到底做了什么，动画比一段文字清楚得多。' },
         { at: 28.8, action: 'dim', target: 'p4', dur: 0.5 },
         { at: 28.8, action: 'spotlight', target: 'b', dur: 0.5 },   // G16 焦点：反过来说：信息里没有顺序，这四类人的收益都会…
-        { at: 29.0, action: 'speak', text: '反过来说：信息里没有顺序，这四类人的收益都会归零。' },
+        { at: 29.6, action: 'speak', text: '反过来说：信息里没有顺序，这四类人的收益都会归零。' },
       ],
       quiz: {
         q: '你是老师，要讲「快速排序的分区过程」。该抓哪个动作？',
@@ -614,7 +614,7 @@ export const deck = {
     {
       id: 'end',
       title: '它不是万能药',
-      duration: 18,
+      duration: 18.5,
 
       beat: 'payoff',
 
@@ -641,7 +641,7 @@ export const deck = {
         { at: 9.6, action: 'speak', text: '记住一句话：逐笔的价值是顺序，不是动起来。' },
         { at: 13.6, action: 'dim', target: 'q', dur: 0.5 },
         { at: 13.6, action: 'spotlight', target: 'cta', dur: 0.5 },   // G16 焦点：没有顺序信息的时候，动画只是慢。…
-        { at: 13.8, action: 'speak', text: '没有顺序信息的时候，动画只是慢。' },
+        { at: 14.4, action: 'speak', text: '没有顺序信息的时候，动画只是慢。' },
       ],
       quiz: {
         q: '最后确认一下：什么情况下**不该**用这个模式？',

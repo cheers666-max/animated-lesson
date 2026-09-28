@@ -4,23 +4,46 @@
 |---|---|
 | `intro-why-stroke-by-stroke.mp4` | **元课件**：用这个模式介绍这个模式（8 幕 / 226 秒 / 1920×1080） |
 | `why-stroke-by-stroke.mp4` | **按笔画示例**：de Casteljau / A* / SDF 五个 case（5 幕 / 98 秒 / 1280×720） |
-| `fourier-storyboard.png` | **傅立叶故事板**：16 帧一次看完 160 秒（4×4，带时间码，1895×1071） |
-| `fourier.mp4` | **傅立叶变换**：主张→机制→量级→边界→推论 完整走一遍（5 幕 / 160 秒 / 1280×720） |
-| `gates.mp4` | **新能力验收样本**：门禁纪律 —— `quiz.at` 先问后讲 / `draw{from,to}`+`hold` 分段 / 每幕一个 `boundary`（5 幕 / **90 秒** / 1280×720） |
-| `gates-storyboard.png` | 上面那份的故事板：16 帧看完 90 秒（4×4，带时间码） |
+| `fourier-storyboard.png` | **傅立叶故事板**：16 帧一次看完 164.5 秒（4×4，带时间码，1895×1071） |
+| `fourier.mp4` | **傅立叶变换**：主张→机制→量级→边界→推论 完整走一遍（5 幕 / 164.5 秒 / 1280×720） |
+| `gates.mp4` | **新能力验收样本**：门禁纪律 —— `quiz.at` 先问后讲 / `draw{from,to}`+`hold` 分段 / 每幕一个 `boundary`（5 幕 / **102 秒** / 1280×720） |
+| `gates-storyboard.png` | 上面那份的故事板：16 帧看完 102 秒（4×4，带时间码） |
 | `kvcache.mp4` | **文章改编**：《被讨厌的算法 · 第一篇》带宽与 KV Cache（7 幕 / **158 秒** / 1280×720）。数字全部由 `scripts/inference-numbers.mjs` 复算 |
 | `kvcache-storyboard.png` | 上面那份的故事板：16 帧看完 158 秒 |
+| `kvcache-vo.m4a` | 上面那份的**旁白音轨**（22 句 / 158.000 秒，和画面等长） |
+| `kvcache-voiced.mp4` | 上面那份**带配音**的版本：视频流直接 copy，只叠音轨 |
 
-都是确定性时间轴逐帧导出的，无声，字幕已烘焙进画面（G12 量过像素才敢这么说）。
+都是确定性时间轴逐帧导出的，字幕已烘焙进画面（G12 量过像素才敢这么说）。
+除 `kvcache-voiced.mp4` 外均**无声**。
+
+## 配音怎么来的
+
+台词不是另写一份 —— 直接从编译后的 `beats` 取（`window.DECK_INFO.scenes[i].speaks`），
+所以**字幕显示什么、配音就念什么**，改了场景文件两边一起变。
+
+```bash
+# 只对账：逐句列出「声明窗口 / 实测时长 / 需要微调多少」和有没有抢话
+node scripts/voiceover.mjs kvcache
+
+# 出音轨 + 合成（帧已经不重编了，-c:v copy）
+node scripts/voiceover.mjs kvcache --reuse --check --build --mux=out/kvcache.mp4
+```
+
+实测 Tingting 的中文速率是 **0.156–0.258 秒/字（中位 4.6 字/秒）** ——
+引擎的 `SPEAK_CPS = 4.6` 是对的，但单句波动大（标点停顿、拉丁词更快）。
+处理办法不是去拟合"每秒几个字"，而是让**音频适配时间轴**：
+逐句 `tempo = 实测 / 声明窗口`（上限 1.3×，只加速不减速）用 `atempo` 压进自己的窗口，
+字幕和声音就按构造对齐了。实测最快 ×1.19，11/22 句无需微调，0 处抢话。
 
 重新生成（帧直接管道进 ffmpeg，不落盘）：
 
 ```bash
-# 文章改编（158 秒，约 5 分钟出片）
+# 文章改编（158 秒，约 5 分钟出片）+ 配音
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.kvcache.js' \
      --mp4=out/kvcache.mp4 --fps=24 --size=1280x720
+node scripts/voiceover.mjs kvcache --reuse --check --build --mux=out/kvcache.mp4
 
-# 新能力验收样本（最短，90 秒，约 1 分钟出片）
+# 新能力验收样本（102 秒，约 1.5 分钟出片）
 node scripts/verify.mjs --deck='templates/deck.html?scenes=./scenes.gates.js' \
      --mp4=out/gates.mp4 --fps=24 --size=1280x720
 

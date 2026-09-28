@@ -943,12 +943,74 @@ if (!detFail) add('G4', true, '确定性渲染', '同 t 双渲染逐字节一致
     orphans.length
       ? orphans.flatMap((s) => s.orphan.map((o) => `scene(${s.id}).${o}`)).slice(0, 5).join(' | ')
       : `${teaching.reduce((a, s) => a + s.content, 0)} 个内容元素全部被编排引用且与旁白重叠`);
+
+  // G20 文本标记：<br> / <b> 必须被真的解释成换行和加粗，不能当字面文字印在画面上。
+  // 踩过的坑：renderText 用 node.textContent，而 renderList 用 node.innerHTML ——
+  // 同一套 DSL 里两套语义。于是 8 份课件把「<br>」原样印在了标题和注脚里，
+  // 而当时**没有任何一条门禁看得见它**（G2b 只量盒子大小，文字多两个字符不会溢出）。
+  // 这条门禁不看源码怎么写，只看**渲染出来的字** —— 源码写法随便换，画面必须干净。
+  const tagLeaks = await ev(`(() => {
+    const D = window.DECK, out = [];
+    const TAG = /<[/]?[a-zA-Z][^>]*>/;
+    for (let i = 0; i < D.spec.scenes.length; i++) {
+      const sc = D.spec.scenes[i];
+      D.goScene(i, { at: +(sc.duration - 0.2).toFixed(2) });
+      for (const el of document.querySelectorAll('#stage .el')) {
+        // 画布 / 三维 / 图片自己画，不走文本渲染器
+        if (el.matches('.el-canvas, .el-three, .el-image')) continue;
+        const txt = el.textContent ?? '';
+        const m = txt.match(TAG);
+        if (m) out.push({ scene: sc.id, tag: m[0], at: m.index,
+                          sample: txt.slice(Math.max(0, m.index - 10), m.index + 24) });
+      }
+    }
+    const seen = new Set();
+    return out.filter((o) => { const k = o.scene + '|' + o.tag + '|' + o.sample; if (seen.has(k)) return false; seen.add(k); return true; });
+  })()`);
+  add('G20', tagLeaks.length === 0, '文本标记被真的解释（不是当字面文字印出来）',
+    tagLeaks.length
+      ? tagLeaks.slice(0, 5).map((x) => `scene(${x.scene}) 画面里印着「${x.tag}」：…${String(x.sample).replace(/\s+/g, ' ')}…`).join(' | ') +
+        (tagLeaks.length > 5 ? ` （共 ${tagLeaks.length} 处）` : '')
+      : '没有任何元素把 HTML 标签当字面文字画出来');
+
+  // G21 旁白窗口不重叠。
+  // 踩过的坑：kvcache 的 kv 幕里，`at: 7.2` 的句子要念 5.22s（到 12.42），
+  // 而 `at: 9.2` 的下一句已经开讲了 —— 两句话在**同一段时间里**要求念出来。
+  // 画面这边看不出来（字幕只是 later-wins 地叠一下），一铺音轨就原形毕露。
+  // 所以这条量的不是「念得好不好」，是**时间轴上根本放不放得下**。
+  const speakClash = await ev(`(() => {
+    const GAP = 0.15;   // 两句话之间至少留这么长的呼吸，否则听上去像抢话
+    const out = [];
+    for (const sc of window.DECK_INFO.scenes) {
+      const sp = (sc.speaks ?? []).slice().sort((a, b) => a.at - b.at);
+      for (let i = 0; i + 1 < sp.length; i++) {
+        const over = (sp[i].at + sp[i].dur + GAP) - sp[i + 1].at;
+        if (over > 0) out.push({ scene: sc.id, over: +over.toFixed(2),
+          a: sp[i].text.slice(0, 14), b: sp[i + 1].text.slice(0, 14) });
+      }
+      // 最后一句也必须在本幕内念完。
+      // ⚠️ 这里必须用 sceneAt（幕内相对时间）—— speaks.at 是全局时间，
+      // 拿它和本幕 duration 比会把前面各幕的时长全算成“念到幕外”（这个错我真犯了）。
+      const last = sp[sp.length - 1];
+      if (last && last.sceneAt + last.dur > sc.duration) {
+        out.push({ scene: sc.id, over: +(last.sceneAt + last.dur - sc.duration).toFixed(2),
+          a: last.text.slice(0, 14), b: '（幕尾）' });
+      }
+    }
+    return out;
+  })()`);
+  const speakTotal = await ev('window.DECK_INFO.scenes.reduce((a, s) => a + (s.speaks ?? []).length, 0)');
+  add('G21', speakClash.length === 0, '旁白在时间轴上放得下（不抢话、不超出本幕）',
+    speakClash.length
+      ? speakClash.slice(0, 4).map((x) => `scene(${x.scene}) 重叠 ${x.over}s：「${x.a}…」压在「${x.b}…」上`).join(' | ') +
+        (speakClash.length > 4 ? ` （共 ${speakClash.length} 处）` : '')
+      : `${speakTotal} 条旁白互不重叠，也没有一条念到幕外`);
   // G19 预测题不许送答案（retrieval ≠ recognition）
   // 学习科学里"提取练习"和"再认"是两回事：正确答案原样躺在画面上时，
   // 学生做的是"找不同"，不是"回忆"。
   const leaks = await ev(`(() => {
     const N = 6;   // 6 字重合就算送答案（中文 6 字已经是一句可辨认的断言）
-    const norm = (x) => String(x ?? '').replace(/[\s，。、；：？！"'（）()《》—…·]/g, '');
+    const norm = (x) => String(x ?? '').replace(/[\\s，。、；：？！"'（）()《》—…·]/g, '');
     const out = [];
     for (const sc of window.DECK.spec.scenes) {
       if (!sc.quiz) continue;

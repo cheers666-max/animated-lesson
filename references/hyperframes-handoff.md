@@ -16,7 +16,7 @@
 | 渲染 | 自己的确定性时间轴 + ffmpeg 管道 | Docker / Lambda / 分布式渲染 / golden baseline |
 | 素材 | 手写场景 DSL（10 种元素、11 个动作） | frame-presets + 每帧一个 sub-agent |
 | 音频 | 无（成片静音，字幕是唯一旁白通道） | `/media-use` 接 BGM/SFX（**要 HeyGen 账号**） |
-| 断言 | **31 项门禁**，含 G11 扰动测试、G15 节奏、G16 焦点、G17 一致、G19 送答案 | `check` 支持 `samples/at/atTransitions/maxIssues/tolerance/contrast/snapshots/captionZone/frameCheck/layout`，issue code 含 `text_occluded`（**带 `coveredFraction` 连续遮挡比例**）、`motion_selector_missing`、`motion_appears_late`、`motion_out_of_order`、`motion_off_frame`、`liveness`，还有静态页冒充检测 |
+| 断言 | **33 项门禁**，含 G11 扰动测试、G15 节奏、G16 焦点、G17 一致、G19 送答案 | `check` 支持 `samples/at/atTransitions/maxIssues/tolerance/contrast/snapshots/captionZone/frameCheck/layout`，issue code 含 `text_occluded`（**带 `coveredFraction` 连续遮挡比例**）、`motion_selector_missing`、`motion_appears_late`、`motion_out_of_order`、`motion_off_frame`、`liveness`，还有静态页冒充检测 |
 | 教学法 | **可执行**（门禁断言） | 无 |
 | 依赖 | 无 | `npx` + HeyGen 账号（`/media-use`） |
 
@@ -55,7 +55,7 @@
 Markdown / 大纲
    ↓  from-md.mjs            ← 产出可过门禁的场景骨架
    ↓  lint-scenes.mjs        ← 静态：确定性 / 安全区 / 叙事结构 / 内容深度
-   ↓  verify.mjs             ← 浏览器 31 项门禁（含 G11 扰动、G15 节奏、G19 送答案）
+   ↓  verify.mjs             ← 浏览器 33 项门禁（含 G11 扰动、G15 节奏、G19 送答案）
    ↓  ??? 出片
 ```
 
@@ -94,7 +94,7 @@ visual → frames → render，每步一道 gate，0/3/6 由用户确认）有�
 |---|---|
 | 重写渲染管线（Docker / Lambda / 分布式） | 别人做得更成熟，且我们的场景是"几十秒到几分钟的课件"，不是批量出片 |
 | 接 `npx` 依赖 | 零依赖是本 skill 的硬约束（`engine/` 全部手写，验证器用 Node 内置 `WebSocket` + CDP）。引入 HeyGen 账号会把它变成云服务 |
-| 抄 40 个 `SKILL.md` 的规模 | 我们有 31 项门禁 + 7 份课件，规模小是特性不是缺陷 |
+| 抄 40 个 `SKILL.md` 的规模 | 我们有 33 项门禁 + 9 份课件，规模小是特性不是缺陷 |
 | 做音频/VO | 成片静音 + 烘焙字幕是我们的取舍：**视频没有音轨，字幕是唯一旁白通道**（G12 会量像素验证它真的在） |
 | 做时间轴编辑器 UI | 编辑器和"确定性时间轴"是两种产品。我们的编辑体验是**场景文件 + 门禁报错** |
 
@@ -111,5 +111,5 @@ visual → frames → render，每步一道 gate，0/3/6 由用户确认）有�
 ## 参考
 
 - `landscape.md` —— 完整的版图调研、实测数据、三类清单、核实记录
-- `authoring-gates.md` —— 31 项门禁的逐条说明
+- `authoring-gates.md` —— 33 项门禁的逐条说明
 - `ppt-bridge.md` —— 为什么**不做**另一个 PPT 生成器（同一个判断的另一面）

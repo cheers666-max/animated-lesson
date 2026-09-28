@@ -16,13 +16,17 @@
 </div>
 
 <script type="module">
-  import { createDeck } from '../engine/scene.js';
+  import { createDeck, compileScene } from '../engine/scene.js';
 
   // 换课件：deck.html?scenes=./scenes.bindgroups.js
   const scenesPath = new URLSearchParams(location.search).get('scenes') || './scenes.instancing.js';
   const mod = await import(scenesPath);
   const spec = mod.deck ?? mod.default;
   const PROVENANCE = mod.PROVENANCE ?? [];
+
+  // 编译一次，给 DECK_INFO 用 —— 和引擎内部编译的是同一份逻辑（不是重写一遍公式）
+  const compiled = spec.scenes.map(compileScene);
+  const startAt = (i) => spec.scenes.slice(0, i).reduce((a, x) => a + x.duration, 0);
 
   const deck = createDeck(spec, {
     mount: '#deck-viewport',
@@ -36,7 +40,14 @@
     hasAssets: !!(window.DECK && window.DECK.assetsReady),
     title: spec.meta.title,
     theme: spec.meta.theme ?? 'ink',
-    scenes: spec.scenes.map((s) => ({ id: s.id, title: s.title, duration: s.duration, elements: s.elements.length, beats: s.beats.length, quiz: !!s.quiz, speakAt: (s.beats ?? []).filter((b) => b.action === 'speak').map((b) => b.at) })),
+    scenes: spec.scenes.map((s, i) => ({ id: s.id, title: s.title, duration: s.duration, elements: s.elements.length, beats: s.beats.length, quiz: !!s.quiz, speakAt: (s.beats ?? []).filter((b) => b.action === 'speak').map((b) => b.at),
+      // 逐句旁白：配音脚本按这个时间轴铺音轨，也是「台词和画面同源」的唯一依据。
+      // at / dur 都来自 compileScene —— 也就是画面真正用到的那份时序，不另算一遍。
+      // ⚠️ 这里的 at 是**全局**时间（已加了前面各幕的时长）；原始 beat 的 at 是幕内相对时间。
+      speaks: compiled[i].speaks.map((sp) => ({ at: startAt(i) + sp.at, sceneAt: sp.at, dur: sp.dur, text: sp.text })),
+      // 可重读的静态窗口（hold）—— 配音时可以把句子往后放，不抢占停顿
+      holds: (s.beats ?? []).filter((b) => b.action === 'hold').map((b) => ({ at: b.at, dur: b.dur })) })),
+    duration: spec.scenes.reduce((a, s) => a + s.duration, 0),
     provenance: PROVENANCE,
   };
 

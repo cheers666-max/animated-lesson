@@ -212,7 +212,7 @@ G15 抓连续变化段长度，G15b 抓"每 12s 至少一个 ≥1.2s 的静态�
 
 | action | 效果 |
 |---|---|
-| `speak` | 旁白：显示字幕，可选 TTS（`?narrate=1`）。**`text.length / 4.6` 必须 ≤ 剩余时长**，否则校验器报错 |
+| `speak` | 旁白：显示字幕，可选 TTS（`?narrate=1`）。时长按 `max(1.6, 字数 / 4.6)` 算。**两条硬约束**：① 自己必须念得完在本幕内；② 不得与同幕的相邻 `speak` 在时间轴上重叠（`G21`）。⚠️ `speak.at` 是**幕内相对时间**；`DECK_INFO.scenes[i].speaks[].at` 是**全局**时间（另有 `sceneAt`） |
 | `stagger` | 把一个 `list` 的条目按 `step` 秒依次 reveal |
 | `zoomTo` | 相机推近某个元素（`scale`），`target: null` 复位 |
 | `reset` | 清掉 spotlight/dim/flash |
@@ -252,7 +252,7 @@ scenes: [
 - 每个节拍的**时长占比 ∈ [8%, 50%]**（低于 8% = 装饰性收尾，高于 50% = 头重脚轻）
 - 第一幕建议 `hook`/`problem`、最后一幕建议 `payoff`（warning）
 
-阈值是先量后定的：现有 7 份课件的实际分布是 8%–23%，
+阈值是先量后定的：9 份课件的实测分布是 **8%–50%**（下界 from-md-demo 的 hook，上界 instancing 的 mechanism），
 所以 [8%, 50%] 不误伤任何人，但拦得住"边界幕只有 3 秒"。
 上线即抓到 `about` 的 payoff 只占 **7.96%** —— 判得对，那是装饰性收尾。
 
@@ -339,7 +339,7 @@ const rnd = (i) => (Math.sin(i * 127.1) * 43758.5453) % 1;   // 输入相同 →
 - `text` 缺 `text`；`canvas2d` 缺 `draw`；`three` 缺 `init`
 - beat 的 `at` 为负或超过场景时长（**永远播不到**）
 - 未知 `action`；需要 `target` 的动作没给 target；target 不存在于本场景
-- `speak` 缺 `text`；**旁白字数 / 4.6 > 剩余秒数**
+- `speak` 缺 `text`；**旁白字数 / 4.6 > 剩余秒数**；**相邻旁白窗口重叠**（`G21`）
 - `quiz` 缺 `q`、选项 < 2、正确选项 ≠ 1 个
 
 **警告**
